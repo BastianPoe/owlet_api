@@ -1,0 +1,8 @@
+pytest
+pylint
+pydocstyle
+flake8
+responses
+pytest-cov
+coverage
+freezegun

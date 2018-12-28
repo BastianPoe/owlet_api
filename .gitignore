@@ -1,0 +1,6 @@
+.tox
+.coverage
+build
+dist
+__pycache__
+owlet_api.egg-info
