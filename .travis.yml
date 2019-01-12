@@ -1,0 +1,22 @@
+sudo: false
+language: python
+matrix:
+  include:
+    - python: 3.5
+      env: TOXENV=py35
+    - python: 3.5
+      env: TOXENV=coverage
+
+    - python: 3.6
+      env: TOXENV=py36
+    - python: 3.6
+      env: TOXENV=flake8
+    - python: 3.6
+      env: TOXENV=pydocstyle
+    - python: 3.6
+      env: TOXENV=pylint
+    - python: 3.6
+      env: TOXENV=coverage
+      
+install: pip install tox-travis
+script: tox
