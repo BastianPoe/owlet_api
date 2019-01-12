@@ -4,8 +4,6 @@ matrix:
   include:
     - python: 3.5
       env: TOXENV=py35
-    - python: 3.5
-      env: TOXENV=coverage
 
     - python: 3.6
       env: TOXENV=py36
@@ -16,7 +14,7 @@ matrix:
     - python: 3.6
       env: TOXENV=pylint
     - python: 3.6
-      env: TOXENV=coverage
+      env: TOXENV=coveralls
       
-install: pip install tox-travis
+install: pip install tox-travis coveralls
 script: tox

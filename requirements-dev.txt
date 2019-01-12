@@ -6,3 +6,4 @@ responses
 pytest-cov
 coverage
 freezegun
+coveralls
