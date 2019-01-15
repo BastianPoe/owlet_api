@@ -15,6 +15,11 @@ matrix:
       env: TOXENV=pylint
     - python: 3.6
       env: TOXENV=coveralls
+
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env: TOXENV=py37
 install: pip install tox-travis coveralls
 script: tox
 
