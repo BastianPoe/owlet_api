@@ -1,32 +1,38 @@
 sudo: false
 language: python
-matrix:
+install: pip install tox-travis coveralls
+script: tox
+jobs:
   include:
-    - python: 3.5
+    - stage: Test
+      python: 3.5
       env: TOXENV=py35
-
-    - python: 3.6
+    - 
+      python: 3.6
       env: TOXENV=py36
-    - python: 3.6
+    - 
+      python: 3.6
       env: TOXENV=flake8
-    - python: 3.6
+    - 
+      python: 3.6
       env: TOXENV=pydocstyle
-    - python: 3.6
+    - 
+      python: 3.6
       env: TOXENV=pylint
-    - python: 3.6
+    - 
+      python: 3.6
       env: TOXENV=coveralls
-
-    - python: 3.7
+    - 
+      python: 3.7
       dist: xenial
       sudo: true
       env: TOXENV=py37
-install: pip install tox-travis coveralls
-script: tox
-
-deploy:
-  provider: pypi
-  user: BastianPoe
-  password:
-    secure: "ljfC9zkKzqHvV5WnmyVOfs6I1at/E/1J9clKqGPfOlMnd4J/qP0G/RqSaifAEk6zycAgDkPP/Nuxdf/1zfWnZuWec957h43In61/NbNiH8IBLPWyCe0FaandDNF7wS4QDkX0muOjQKJZO04qRM1oBlEveWUgOwVj/ftJAs2aOrJDrXtZmrfZwt93C4Xs3pAmvItAP95m8kjcioWt1OfFO59lixJJOZjMsGEmmv0LuH7gRDhoMe6X8MaHyABDUVfe18xN/jUVyVTyPyEevQmSY7BB/SXm94paz8pYljvoYDH7frAOtiVGdMaM5f9lzBJxC9ZhvMdNANL5oyRsHf5PC4prQr4gbh5v5h1CrNrx9uV54eL0g6WtW3P2LRV3cccyztGFNFSSWis9WJlf2hXjcDbgQVi5ub8zyBF53CwkdhSyGRRsFhVd9itHv1WOYxzxA5w0oRGR0K9c4DQq/ukPeuI8T/jHpAYU+FALOKfrD/09iJZGLNiUtvu10vzQqVRl3GVAvq9BtXeIig5kuxBgH3qetFFWWuun63vK61s1yU7MKprhg03WJ4VWA25y5yqF3tlw08no0oSmTQUZD9cYZxejWvas2yQm4lohUtkg0D6ty+TRu+W7JnYfOqkz+9jofu29AQho7gEE1pDWOmgVGAhHGACMOcou7zzwEmId3M0="
-  on:
-    tags: true
+    - stage: deploy
+      script: skip
+      deploy:
+        provider: pypi
+        user: BastianPoe
+        password:
+          secure: "ljfC9zkKzqHvV5WnmyVOfs6I1at/E/1J9clKqGPfOlMnd4J/qP0G/RqSaifAEk6zycAgDkPP/Nuxdf/1zfWnZuWec957h43In61/NbNiH8IBLPWyCe0FaandDNF7wS4QDkX0muOjQKJZO04qRM1oBlEveWUgOwVj/ftJAs2aOrJDrXtZmrfZwt93C4Xs3pAmvItAP95m8kjcioWt1OfFO59lixJJOZjMsGEmmv0LuH7gRDhoMe6X8MaHyABDUVfe18xN/jUVyVTyPyEevQmSY7BB/SXm94paz8pYljvoYDH7frAOtiVGdMaM5f9lzBJxC9ZhvMdNANL5oyRsHf5PC4prQr4gbh5v5h1CrNrx9uV54eL0g6WtW3P2LRV3cccyztGFNFSSWis9WJlf2hXjcDbgQVi5ub8zyBF53CwkdhSyGRRsFhVd9itHv1WOYxzxA5w0oRGR0K9c4DQq/ukPeuI8T/jHpAYU+FALOKfrD/09iJZGLNiUtvu10vzQqVRl3GVAvq9BtXeIig5kuxBgH3qetFFWWuun63vK61s1yU7MKprhg03WJ4VWA25y5yqF3tlw08no0oSmTQUZD9cYZxejWvas2yQm4lohUtkg0D6ty+TRu+W7JnYfOqkz+9jofu29AQho7gEE1pDWOmgVGAhHGACMOcou7zzwEmId3M0="
+        on:
+          tags: true
