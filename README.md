@@ -1,5 +1,5 @@
 # Unofficial Python API for the Owlet Smart Baby Monitor 
-[![Build Status](https://travis-ci.org/BastianPoe/owlet_api.svg?branch=master)](https://travis-ci.org/BastianPoe/owlet_api) [![Coverage Status](https://coveralls.io/repos/github/BastianPoe/owlet_api/badge.svg?branch=master)](https://coveralls.io/github/BastianPoe/owlet_api?branch=master)
+[![Build Status](https://travis-ci.org/BastianPoe/owlet_api.svg?branch=master)](https://travis-ci.org/BastianPoe/owlet_api) [![Coverage Status](https://coveralls.io/repos/github/BastianPoe/owlet_api/badge.svg?branch=master)](https://coveralls.io/github/BastianPoe/owlet_api?branch=master) [![PyPI version](https://badge.fury.io/py/owlet-api.svg)](https://badge.fury.io/py/owlet-api)
 
 This is an unofficial python API for retrieving data from the [Owlet Smart Sock](https://www.owletcare.com). The Owlet Smart Sock is a baby monitoring system that tries to prevent the [Sudden infant death syndrome](https://en.wikipedia.org/wiki/Sudden_infant_death_syndrome) by monitoring the baby's heartbeat as well as blood oxygen level via pulse oximetry and warning parents if abnormalities are detected.
 
