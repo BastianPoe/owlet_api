@@ -68,7 +68,7 @@ class OwletAPI():
         if result.status_code == 401:
             raise OwletPermanentCommunicationException(
                 'Login failed, check username and password')
-        elif result.status_code != 200:
+        if result.status_code != 200:
             raise OwletTemporaryCommunicationException(
                 'Login request failed - status code')
 
