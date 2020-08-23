@@ -54,7 +54,7 @@ class Owlet():
 
         key = self.properties["APP_ACTIVE"].key
 
-        reactivate_url = self.owlet_api.base_properties_url + \
+        reactivate_url = self.owlet_api.get_config()["owlet_properties"] + \
             'properties/{}/datapoints'.format(key)
         reactivate_headers = self.owlet_api.get_request_headers()
         reactivate_payload = {
@@ -80,7 +80,7 @@ class Owlet():
 
     def update(self):
         """Update attributes of the Owlet."""
-        properties_url = self.owlet_api.base_properties_url + \
+        properties_url = self.owlet_api.get_config()["owlet_properties"] + \
             'dsns/{}/properties'.format(self.dsn)
 
         properties_header = self.owlet_api.get_request_headers()
