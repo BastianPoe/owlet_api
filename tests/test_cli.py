@@ -180,7 +180,7 @@ def test_cli_token():
     responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
  
-    with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'token']):
+    with patch('sys.argv', ['cli.py', '--region', 'US', 'test@test.de', 'moped', 'token']):
         cli()
 
 @responses.activate
@@ -189,7 +189,7 @@ def test_cli_login_fail():
               json=LOGIN_PAYLOAD, status=401)
  
 
-    with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'token']):
+    with patch('sys.argv', ['cli.py', '--region', 'US', 'test@test.de', 'moped', 'token']):
         with pytest.raises(SystemExit) as info:
             cli()
 
@@ -198,7 +198,7 @@ def test_cli_login_fail():
 
 @responses.activate
 def test_cli_server_down():
-    with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'token']):
+    with patch('sys.argv', ['cli.py', '--region', 'US', 'test@test.de', 'moped', 'token']):
         with pytest.raises(SystemExit) as info:
             cli()
 
@@ -212,7 +212,7 @@ def test_cli_devices_ok():
     responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json',
               json=DEVICES_PAYLOAD, status=200)
  
-    with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'devices']):
+    with patch('sys.argv', ['cli.py', '--region', 'US', 'test@test.de', 'moped', 'devices']):
         cli()
 
 @responses.activate
@@ -224,7 +224,7 @@ def test_cli_attributes_ok():
     responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
  
-    with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'attributes']):
+    with patch('sys.argv', ['cli.py', '--region', 'US', 'test@test.de', 'moped', 'attributes']):
         cli()
 
 @responses.activate
@@ -240,10 +240,9 @@ def test_cli_download_ok():
     responses.add(responses.GET, 'https://ayla-device-field-production-1a2039d9.s3.amazonaws.com/X?AWSAccessKeyId=Y&Expires=1234&Signature=Z', 
               status=200)
  
-    with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'download']):
+    with patch('sys.argv', ['cli.py', '--region', 'US', 'test@test.de', 'moped', 'download']):
         cli()
 
-#@pytest.mark.skip(reason="no way of currently testing this")
 @responses.activate
 def test_cli_stream_ok():
 
@@ -256,10 +255,9 @@ def test_cli_stream_ok():
     responses.add(responses.POST, 'https://ads-field.aylanetworks.com/apiv1/properties/42738119/datapoints',
               status=201)
  
-    with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', '--timeout', '10', 'stream']):
+    with patch('sys.argv', ['cli.py', '--region', 'US', 'test@test.de', 'moped', '--timeout', '10', 'stream']):
         cli()
 
-#@pytest.mark.skip(reason="no way of currently testing this")
 @responses.activate
 def test_cli_stream_updatefail():
 
@@ -274,10 +272,9 @@ def test_cli_stream_updatefail():
     responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=400)
 
-    with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', '--timeout', '10', 'stream']):
+    with patch('sys.argv', ['cli.py', '--region', 'US', 'test@test.de', 'moped', '--timeout', '10', 'stream']):
         cli()
 
-#@pytest.mark.skip(reason="no way of currently testing this")
 @responses.activate
 def test_cli_stream_reactivationfail():
 
@@ -308,7 +305,7 @@ def test_cli_stream_ctrlc(sleep_mock):
     responses.add(responses.POST, 'https://ads-field.aylanetworks.com/apiv1/properties/42738119/datapoints',
               status=201)
  
-    with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', '--timeout', '10', 'stream']):
+    with patch('sys.argv', ['cli.py', '--region', 'US', 'test@test.de', 'moped', '--timeout', '10', 'stream']):
         with pytest.raises(SystemExit):
             cli()
 

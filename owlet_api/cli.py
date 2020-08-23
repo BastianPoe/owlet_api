@@ -4,6 +4,7 @@
 import argparse
 import time
 import sys
+from owlet_api.owletapi import OwletRegion
 from owlet_api.owletapi import OwletAPI
 from owlet_api.owletexceptions import OwletTemporaryCommunicationException
 from owlet_api.owletexceptions import OwletPermanentCommunicationException
@@ -27,6 +28,10 @@ def cli():
                         help='Specify attributes for stream filter')
     parser.add_argument('--timeout', dest='timeout',
                         help='Specify streaming timeout in seconds')
+    parser.add_argument('--region', dest='region',
+                        help='Specify the server region or use auto detection',
+                        choices=["auto", "US", "EU"], default="auto")
+
     # Parse arguments
     args = parser.parse_args()
 
@@ -41,12 +46,25 @@ def cli():
     # Provide Login data
     api.set_email(args.email)
     api.set_password(args.password)
+    if args.region == "auto":
+        try:
+            api.detect_region()
+        except OwletPermanentCommunicationException:
+            print("Autodetecting region failed, username or password wrong?")
+            sys.exit(1)
+    elif args.region == "US":
+        api.set_region(OwletRegion.US)
+    elif args.region == "EU":
+        api.set_region(OwletRegion.EU)
+    else:
+        print("Invalid region specified")
+        sys.exit(1)
 
     # Login
     try:
         api.login()
     except OwletPermanentCommunicationException:
-        print("Login failed, username or passwort might be wrong")
+        print("Login failed, username, password or region might be wrong")
         sys.exit(1)
     except OwletTemporaryCommunicationException:
         print("Login failed, server might be down")
