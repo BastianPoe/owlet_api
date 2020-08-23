@@ -16,3 +16,6 @@ class OwletPermanentCommunicationException(OwletException):
 
 class OwletNotInitializedException(OwletException):
     """Owlet API not initialized yet."""
+
+class OwletConfigurationError(OwletException):
+    """Invalid Owlet Configuration."""
