@@ -47,6 +47,22 @@ class OwletAPI():
         """Set app_secret."""
         self.app_secret = app_secret
 
+    def set_owlet_login_url(self, owlet_login_url):
+        """Set owlet_login_url."""
+        self.owlet_login_url = owlet_login_url
+
+    def set_owlet_login_token_provider_url(self, owlet_login_token_provider_url):
+        """Set owlet_login_token_provider_url."""
+        self.owlet_login_token_provider_url = owlet_login_token_provider_url
+
+    def set_base_user_url(self, base_user_url):
+        """Set base_user_url."""
+        self.base_user_url = base_user_url
+
+    def set_base_properties_url(self, base_properties_url):
+        """Set base_properties_url."""
+        self.base_properties_url = base_properties_url
+
     def set_email(self, email):
         """Set Email address aka Username."""
         self._email = email
