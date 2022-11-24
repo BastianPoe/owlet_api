@@ -27,6 +27,7 @@ class OwletAPI():
         self._email = email
         self._password = password
         self._owlet_id_token = None
+        self._owlet_local_id = None
         self._owlet_refresh_token = None
         self._owlet_id_token_expiry_time = None
         self._owlet_mini_token = None
@@ -130,12 +131,14 @@ class OwletAPI():
                 'Server did not send valid json (Step 1 of 3)')
 
         if ('idToken' not in json_result) or \
+           ('localId' not in json_result) or \
            ('refreshToken' not in json_result) or \
            ('expiresIn' not in json_result):
             raise OwletTemporaryCommunicationException(
                 'Server did not send id token (Step 1 of 3)', json_result)
 
         self._owlet_id_token = json_result['idToken']
+        self._owlet_local_id = json_result['localId']
         self._owlet_refresh_token = json_result['refreshToken']
         self._owlet_id_token_expiry_time = time.time() + int(json_result['expiresIn'])
 
