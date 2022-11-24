@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 name='owlet_api'
-version='0.1.0'
+version='0.2.0'
 
 setup(name = name,
         version = version,
