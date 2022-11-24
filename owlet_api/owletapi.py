@@ -82,6 +82,9 @@ class OwletAPI():
             if result.text.__contains__('INVALID_PASSWORD'):
                 raise OwletPermanentCommunicationException(
                     'Login failed, bad password', result)
+            if result.text.__contains__('API_KEY_INVALID'):
+                raise OwletPermanentCommunicationException(
+                    'Login failed, bad API key.', result)
             raise OwletPermanentCommunicationException(
                 'Login failed, check username and password', result)
         if result.status_code != 200:
@@ -121,7 +124,7 @@ class OwletAPI():
             )
         except RequestException:
             raise OwletTemporaryCommunicationException(
-                'Login request failed - no response (Step 2 of 3)', result)
+                'Login request failed - no response (Step 2 of 3)')
 
         # Login failed
         if result.status_code != 200:
@@ -133,7 +136,7 @@ class OwletAPI():
             json_result = result.json()
         except JSONDecodeError:
             raise OwletTemporaryCommunicationException(
-                'Server did not send valid json (Step 2 of 3)', json_result)
+                'Server did not send valid json (Step 2 of 3)')
 
         if ('mini_token' not in json_result):
             raise OwletTemporaryCommunicationException(
@@ -172,6 +175,10 @@ class OwletAPI():
 
         # Login failed
         if result.status_code != 200:
+            if result.status_code == 404 and\
+                result.text.__contains__('Could not find application'):
+                raise OwletPermanentCommunicationException(
+                        'login request failed - app_id or app_secret is bad (Step 3 of 3)', result)
             raise OwletTemporaryCommunicationException(
                 'Login request failed - status code (' + str(result.status_code) + ') - (Step 3 of 3)', result)
 
@@ -180,13 +187,13 @@ class OwletAPI():
             json_result = result.json()
         except JSONDecodeError:
             raise OwletTemporaryCommunicationException(
-                'Server did not send valid json(Step 3 of 3)', json_result)
+                'Server did not send valid json (Step 3 of 3)')
 
         if ('access_token' not in json_result) or \
            ('refresh_token' not in json_result) or \
            ('expires_in' not in json_result):
             raise OwletTemporaryCommunicationException(
-                'Server did not send access token(Step 3 of 3)', json_result)
+                'Server did not send access token (Step 3 of 3)', json_result)
 
         self._auth_token = json_result['access_token']
         self._refresh_token = json_result['refresh_token']
