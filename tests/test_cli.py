@@ -285,7 +285,7 @@ def test_cli_stream_ok():
 
 #@pytest.mark.skip(reason="no way of currently testing this")
 @responses.activate
-def test_cli_stream_updatefail():
+def test_cli_stream_update_fail():
 
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
@@ -307,7 +307,7 @@ def test_cli_stream_updatefail():
 
 #@pytest.mark.skip(reason="no way of currently testing this")
 @responses.activate
-def test_cli_stream_reactivationfail():
+def test_cli_stream_reactivation_fail():
 
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)

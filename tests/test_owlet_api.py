@@ -193,7 +193,7 @@ def test_login_fail_step_1_temporary():
     assert api.get_auth_token() == None
 
 @responses.activate
-def test_login_fail_step_1_invalidjson():
+def test_login_fail_step_1_invalid_json():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               body="broken", status=200)
 
@@ -211,7 +211,7 @@ def test_login_fail_step_1_invalidjson():
     assert api.get_auth_token() == None
 
 @responses.activate
-def test_login_fail_step_1_incompletejson():
+def test_login_fail_step_1_incomplete_json():
     login_payload = {
         'access_token': 'testtoken'
     }
@@ -232,7 +232,7 @@ def test_login_fail_step_1_incompletejson():
     assert api.get_auth_token() == None
       
 @responses.activate
-def test_login_fail_step_1_noconnection():
+def test_login_fail_step_1_no_connection():
     api = OwletAPI()
     api.set_email("test@test.de")
     api.set_password("moped")
@@ -267,7 +267,7 @@ def test_login_fail_step_2_temporary():
     assert api.get_auth_token() == None
 
 @responses.activate
-def test_login_fail_step_2_invalidjson():
+def test_login_fail_step_2_invalid_json():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -287,7 +287,7 @@ def test_login_fail_step_2_invalidjson():
     assert api.get_auth_token() == None
 
 @responses.activate
-def test_login_fail_step_2_incompletejson():
+def test_login_fail_step_2_incomplete_json():
     login_payload = {
     }
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
@@ -309,7 +309,7 @@ def test_login_fail_step_2_incompletejson():
     assert api.get_auth_token() == None
       
 @responses.activate
-def test_login_fail_step_2_noconnection():
+def test_login_fail_step_2_no_connection():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
             json=LOGIN_PAYLOAD, status=200)
 
@@ -374,7 +374,7 @@ def test_login_fail_step_3_app_id_or_app_secret_bad():
     assert api.get_auth_token() == None
 
 @responses.activate
-def test_login_fail_step_3_invalidjson():
+def test_login_fail_step_3_invalid_json():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -396,7 +396,7 @@ def test_login_fail_step_3_invalidjson():
     assert api.get_auth_token() == None
 
 @responses.activate
-def test_login_fail_step_3_incompletejson():
+def test_login_fail_step_3_incomplete_json():
     login_payload = {
         'access_token': 'testtoken'
     }
@@ -421,7 +421,7 @@ def test_login_fail_step_3_incompletejson():
     assert api.get_auth_token() == None
       
 @responses.activate
-def test_login_fail_step_3_noconnection():
+def test_login_fail_step_3_no_connection():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -550,7 +550,7 @@ def test_get_devices_ok():
     assert Owlet.__init__.called_once
 
 @responses.activate
-def test_update_devices_fail_servererror():
+def test_update_devices_fail_server_error():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -571,7 +571,7 @@ def test_update_devices_fail_servererror():
     assert 'Server request failed - status code' in str(info.value)
 
 @responses.activate
-def test_update_devices_fail_noresponse():
+def test_update_devices_fail_no_response():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -590,7 +590,7 @@ def test_update_devices_fail_noresponse():
     assert 'Server request failed - no response' in str(info.value)
 
 @responses.activate
-def test_update_devices_fail_invalidjson():
+def test_update_devices_fail_invalid_json():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -610,7 +610,7 @@ def test_update_devices_fail_invalidjson():
         
     assert 'Server did not send valid json' in str(info.value)
 
-def test_update_devices_fail_noinit():
+def test_update_devices_fail_no_init():
     api = OwletAPI()
 
     with pytest.raises(OwletNotInitializedException) as info:

@@ -224,7 +224,7 @@ def test_update_ok():
     assert device.get_property('APP_ACTIVE').value == 0
 
 @responses.activate
-def test_update_noresponse():
+def test_update_no_response():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -363,7 +363,7 @@ def test_reactivate_ok():
     device.reactivate()
 
 @responses.activate
-def test_reactivate_fail_noattributes():
+def test_reactivate_fail_no_attributes():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -385,7 +385,7 @@ def test_reactivate_fail_noattributes():
 
 
 @responses.activate
-def test_reactivate_fail_wrongattributes():
+def test_reactivate_fail_wrong_attributes():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -416,7 +416,7 @@ def test_reactivate_fail_wrongattributes():
     assert 'Initialize first - missing property' in str(info.value)
 
 @responses.activate
-def test_reactivate_fail_noconnection():
+def test_reactivate_fail_no_connection():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -442,7 +442,7 @@ def test_reactivate_fail_noconnection():
     assert 'Server Request failed - no response' in str(info.value)
 
 @responses.activate
-def test_reactivate_fail_statuscode():
+def test_reactivate_fail_status_code():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -498,7 +498,7 @@ def test_download_logged_data_ok():
     
 
 @responses.activate
-def test_download_logged_data_fail_noinit():
+def test_download_logged_data_fail_no_init():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -520,7 +520,7 @@ def test_download_logged_data_fail_noinit():
     assert 'Initialize first - no properties' in str(info.value) 
 
 @responses.activate
-def test_download_logged_data_fail_noattribute():
+def test_download_logged_data_fail_no_attribute():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -551,7 +551,7 @@ def test_download_logged_data_fail_noattribute():
     assert 'Initialize first - missing property' in str(info.value)
 
 @responses.activate
-def test_download_logged_data_fail_noconnection():
+def test_download_logged_data_fail_no_connection():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -578,7 +578,7 @@ def test_download_logged_data_fail_noconnection():
 
 
 @responses.activate
-def test_download_logged_data_fail_statuscode():
+def test_download_logged_data_fail_status_code():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -607,7 +607,7 @@ def test_download_logged_data_fail_statuscode():
 
 
 @responses.activate
-def test_download_logged_data_fail_invalidjson():
+def test_download_logged_data_fail_invalid_json():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -636,7 +636,7 @@ def test_download_logged_data_fail_invalidjson():
 
 
 @responses.activate
-def test_download_logged_data_fail_incompletejson():
+def test_download_logged_data_fail_incomplete_json():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -667,7 +667,7 @@ def test_download_logged_data_fail_incompletejson():
 
 
 @responses.activate
-def test_download_logged_data_fail_nodownload():
+def test_download_logged_data_fail_no_download():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
@@ -696,7 +696,7 @@ def test_download_logged_data_fail_nodownload():
 
 
 @responses.activate
-def test_download_logged_data_fail_nodownloadcode():
+def test_download_logged_data_fail_no_download_code():
     responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
     responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
