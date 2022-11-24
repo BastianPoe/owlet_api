@@ -17,7 +17,12 @@ from owlet_api.owletexceptions import OwletNotInitializedException
 from owlet_api.cli import cli
 
 LOGIN_PAYLOAD = {
-    'access_token': 'testtoken',
+    'access_token': 'test_access_token',
+    'idToken': 'test_id_token',
+    'refreshToken': 'test_refresh_token',
+    'refresh_token': 'test_refresh_token',
+    'mini_token': 'test_min_token',
+    'expiresIn': '3600',
     'expires_in': 86400
 }
 
@@ -168,16 +173,20 @@ DOWNLOAD_DATA = {
       'metadata':{  
 
       },
-      'value':'https://ads-field.aylanetworks.com/apiv1/devices/24826059/properties/LOGGED_DATA_CACHE/datapoints/76ce9810-5375-11e8-e7a5-6450803806ca.json',
+      'value':'https://ads-owlue1.aylanetworks.com/apiv1/devices/24826059/properties/LOGGED_DATA_CACHE/datapoints/76ce9810-5375-11e8-e7a5-6450803806ca.json',
       'created_at_from_device':None,
-      'file':'https://ayla-device-field-production-1a2039d9.s3.amazonaws.com/X?AWSAccessKeyId=Y&Expires=1234&Signature=Z'
+      'file':'https://ayla-device-owlue1-production-1a2039d9.s3.amazonaws.com/X?AWSAccessKeyId=Y&Expires=1234&Signature=Z'
    }
 }
 
 
 @responses.activate
 def test_cli_token():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
  
     with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'token']):
@@ -185,9 +194,8 @@ def test_cli_token():
 
 @responses.activate
 def test_cli_login_fail():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
-              json=LOGIN_PAYLOAD, status=401)
- 
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=400)
 
     with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'token']):
         with pytest.raises(SystemExit) as info:
@@ -207,9 +215,13 @@ def test_cli_server_down():
 
 @responses.activate
 def test_cli_devices_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json',
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json',
               json=DEVICES_PAYLOAD, status=200)
  
     with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'devices']):
@@ -217,11 +229,15 @@ def test_cli_devices_ok():
 
 @responses.activate
 def test_cli_attributes_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json',
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json',
               json=DEVICES_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
  
     with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'attributes']):
@@ -229,15 +245,19 @@ def test_cli_attributes_ok():
 
 @responses.activate
 def test_cli_download_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json',
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json',
               json=DEVICES_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
     responses.add(responses.GET, 'http://de.mo/file', 
               json=DOWNLOAD_DATA, status=200)
-    responses.add(responses.GET, 'https://ayla-device-field-production-1a2039d9.s3.amazonaws.com/X?AWSAccessKeyId=Y&Expires=1234&Signature=Z', 
+    responses.add(responses.GET, 'https://ayla-device-owlue1-production-1a2039d9.s3.amazonaws.com/X?AWSAccessKeyId=Y&Expires=1234&Signature=Z', 
               status=200)
  
     with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', 'download']):
@@ -247,13 +267,17 @@ def test_cli_download_ok():
 @responses.activate
 def test_cli_stream_ok():
 
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json',
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json',
               json=DEVICES_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
-    responses.add(responses.POST, 'https://ads-field.aylanetworks.com/apiv1/properties/42738119/datapoints',
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/apiv1/properties/42738119/datapoints',
               status=201)
  
     with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', '--timeout', '10', 'stream']):
@@ -263,15 +287,19 @@ def test_cli_stream_ok():
 @responses.activate
 def test_cli_stream_updatefail():
 
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json',
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json',
               json=DEVICES_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
-    responses.add(responses.POST, 'https://ads-field.aylanetworks.com/apiv1/properties/42738119/datapoints',
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/apiv1/properties/42738119/datapoints',
               status=201)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=400)
 
     with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', '--timeout', '10', 'stream']):
@@ -281,13 +309,17 @@ def test_cli_stream_updatefail():
 @responses.activate
 def test_cli_stream_reactivationfail():
 
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json',
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json',
               json=DEVICES_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
-    responses.add(responses.POST, 'https://ads-field.aylanetworks.com/apiv1/properties/42738119/datapoints',
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/apiv1/properties/42738119/datapoints',
               status=400)
  
     with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', '--timeout', '10', 'stream']):
@@ -299,13 +331,17 @@ def test_cli_stream_reactivationfail():
 def test_cli_stream_ctrlc(sleep_mock):
     sleep_mock.side_effect = SystemExit
 
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json',
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json',
               json=DEVICES_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
-    responses.add(responses.POST, 'https://ads-field.aylanetworks.com/apiv1/properties/42738119/datapoints',
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/apiv1/properties/42738119/datapoints',
               status=201)
  
     with patch('sys.argv', ['cli.py', 'test@test.de', 'moped', '--timeout', '10', 'stream']):

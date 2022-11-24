@@ -15,7 +15,12 @@ from owlet_api.owletexceptions import OwletTemporaryCommunicationException
 from owlet_api.owletexceptions import OwletNotInitializedException
 
 LOGIN_PAYLOAD = {
-    'access_token': 'testtoken',
+    'access_token': 'test_access_token',
+    'idToken': 'test_id_token',
+    'refreshToken': 'test_refresh_token',
+    'refresh_token': 'test_refresh_token',
+    'mini_token': 'test_min_token',
+    'expiresIn': '3600',
     'expires_in': 86400
 }
 
@@ -49,7 +54,11 @@ DEVICES_PAYLOAD = [
 
 @responses.activate
 def test_login_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -60,16 +69,16 @@ def test_login_ok():
     
     assert api._email == "test@test.de"
     assert api._password == "moped"
-    assert api._auth_token == "testtoken"
+    assert api._auth_token == "test_access_token"
     assert api._expiry_time > time.time() + 86400 - 1
     assert api._expiry_time < time.time() + 86400 + 1
-    assert api.get_auth_token() == "testtoken"
+    assert api.get_auth_token() == "test_access_token"
 
 
 @responses.activate
 def test_login_fail():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
-              json=LOGIN_PAYLOAD, status=401)
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=400)
 
     api = OwletAPI()
     api.set_email("test@test.de")
@@ -87,7 +96,7 @@ def test_login_fail():
 
 @responses.activate
 def test_login_fail_temporary():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               json=LOGIN_PAYLOAD, status=500)
 
     api = OwletAPI()
@@ -106,7 +115,7 @@ def test_login_fail_temporary():
 
 @responses.activate
 def test_login_fail_invalidjson():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               body="broken", status=200)
 
     api = OwletAPI()
@@ -116,7 +125,7 @@ def test_login_fail_invalidjson():
     with pytest.raises(OwletTemporaryCommunicationException) as info:
         api.login()
         
-    assert 'Server did not send valid json' in str(info.value)
+    assert 'Server did not send valid json (Step 1 of 3)' in str(info.value)
     assert api._email == "test@test.de"
     assert api._password == "moped"
     assert api._auth_token == None
@@ -128,7 +137,7 @@ def test_login_fail_incompletejson():
     login_payload = {
         'access_token': 'testtoken'
     }
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               json=login_payload, status=200)
 
     api = OwletAPI()
@@ -138,7 +147,7 @@ def test_login_fail_incompletejson():
     with pytest.raises(OwletTemporaryCommunicationException) as info:
         api.login()
 
-    assert 'Server did not send access token' in str(info.value)
+    assert 'Server did not send id token (Step 1 of 3)' in str(info.value)
     assert api._email == "test@test.de"
     assert api._password == "moped"
     assert api._auth_token == None
@@ -163,7 +172,11 @@ def test_login_fail_noconnection():
 
 @responses.activate
 def test_get_auth_token_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -172,17 +185,25 @@ def test_get_auth_token_ok():
     api.login()
     # If no exception occurred, everything seems to be fine
     
-    assert api.get_auth_token() == "testtoken"
+    assert api.get_auth_token() == "test_access_token"
 
 
 @responses.activate
 def test_get_auth_token_relogin():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
 
     login_payload2 = copy.deepcopy(LOGIN_PAYLOAD)
     login_payload2['access_token'] = 'newtoken'
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=login_payload2, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=login_payload2, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=login_payload2, status=200)
 
     api = OwletAPI()
@@ -192,7 +213,7 @@ def test_get_auth_token_relogin():
     # Login happens at 2018-12-30 and lasts 1 day
     with freeze_time("2018-12-30"):
         api.login()
-        assert api.get_auth_token() == "testtoken"
+        assert api.get_auth_token() == "test_access_token"
 
         
     with freeze_time("2019-12-30"):
@@ -206,7 +227,11 @@ def test_get_auth_token_fail():
 
 @responses.activate
 def test_get_request_headers_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -216,7 +241,7 @@ def test_get_request_headers_ok():
 
     assert api.get_request_headers()['Content-Type'] == "application/json"
     assert api.get_request_headers()['Accept'] == "application/json"
-    assert api.get_request_headers()['Authorization'] == "testtoken"
+    assert api.get_request_headers()['Authorization'] == "test_access_token"
 
 
 def test_get_request_headers_fail():
@@ -227,7 +252,11 @@ def test_get_request_headers_fail():
 @patch('owlet_api.owletapi.Owlet.__init__', Mock(return_value=None))
 @responses.activate
 def test_get_devices_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -235,7 +264,7 @@ def test_get_devices_ok():
     api.set_password("moped")
     api.login()
 
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json', json=DEVICES_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json', json=DEVICES_PAYLOAD, status=200)
     api.get_devices()
     
     assert Owlet.__init__.called_once
@@ -252,7 +281,11 @@ def test_get_devices_ok():
 
 @responses.activate
 def test_update_devices_fail_servererror():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -260,7 +293,7 @@ def test_update_devices_fail_servererror():
     api.set_password("moped")
     api.login()
 
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json', json=DEVICES_PAYLOAD, status=500)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json', json=DEVICES_PAYLOAD, status=500)
 
     with pytest.raises(OwletTemporaryCommunicationException) as info:
         api.update_devices()
@@ -269,7 +302,11 @@ def test_update_devices_fail_servererror():
 
 @responses.activate
 def test_update_devices_fail_noresponse():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -284,7 +321,11 @@ def test_update_devices_fail_noresponse():
 
 @responses.activate
 def test_update_devices_fail_invalidjson():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -292,7 +333,7 @@ def test_update_devices_fail_invalidjson():
     api.set_password("moped")
     api.login()
 
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json', body="invalid", status=200)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json', body="invalid", status=200)
 
     with pytest.raises(OwletTemporaryCommunicationException) as info:
         api.update_devices()
@@ -311,7 +352,11 @@ def test_update_devices_fail_noinit():
 @patch('owlet_api.owlet.Owlet.get_update_interval', Mock(return_value=177))
 @responses.activate
 def test_get_devices_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -319,7 +364,7 @@ def test_get_devices_ok():
     api.set_password("moped")
     api.login()
 
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json', json=DEVICES_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/devices.json', json=DEVICES_PAYLOAD, status=200)
     api.get_devices()
  
     assert api.get_update_interval() == 177

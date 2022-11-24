@@ -46,7 +46,7 @@ def cli():
     try:
         api.login()
     except OwletPermanentCommunicationException:
-        print("Login failed, username or passwort might be wrong")
+        print("Login failed, username or password might be wrong")
         sys.exit(1)
     except OwletTemporaryCommunicationException:
         print("Login failed, server might be down")

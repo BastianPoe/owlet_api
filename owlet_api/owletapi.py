@@ -72,7 +72,7 @@ class OwletAPI():
             )
         except RequestException:
             raise OwletTemporaryCommunicationException(
-                '(Step 1) Login request failed - no response', result)
+                'Login request failed - no response')
 
         # Login failed
         if result.status_code == 400:
@@ -93,7 +93,7 @@ class OwletAPI():
             json_result = result.json()
         except JSONDecodeError:
             raise OwletTemporaryCommunicationException(
-                'Server did not send valid json (Step 1 of 3)', json_result)
+                'Server did not send valid json (Step 1 of 3)')
 
         if ('idToken' not in json_result) or \
            ('refreshToken' not in json_result) or \
@@ -235,7 +235,7 @@ class OwletAPI():
             )
         except RequestException:
             raise OwletTemporaryCommunicationException(
-                'Server request failed - no response', result)
+                'Server request failed - no response')
 
         if result.status_code != 200:
             raise OwletTemporaryCommunicationException(
@@ -245,7 +245,7 @@ class OwletAPI():
             json_result = result.json()
         except JSONDecodeError:
             raise OwletTemporaryCommunicationException(
-                'Server did not send valid json', json_result)
+                'Server did not send valid json')
 
         self._devices = []
 
