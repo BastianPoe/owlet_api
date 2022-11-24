@@ -92,10 +92,90 @@ def test_login_fail():
     assert api._password == "moped"
     assert api._auth_token == None
     assert api.get_auth_token() == None
+ 
+@responses.activate
+def test_login_fail_step_1_api_key_bad():
+    login_payload = {
+        "error": {
+            "details": [
+                {
+                    "reason": "API_KEY_INVALID",
+                }
+            ]
+        }
+    }
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=login_payload, status=400)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
     
+    with pytest.raises(OwletPermanentCommunicationException) as info:
+        api.login()
+    
+    assert 'Login failed, bad API key.' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+ 
+@responses.activate
+def test_login_fail_step_1_username_bad():
+    login_payload = {
+        "error": {
+            "details": [
+                {
+                    "reason": "EMAIL_NOT_FOUND"
+                }
+            ]
+        }
+    }
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=login_payload, status=400)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletPermanentCommunicationException) as info:
+        api.login()
+    
+    assert 'Login failed, bad username' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+ 
+@responses.activate
+def test_login_fail_step_1_password_bad():
+    login_payload = {
+        "error": {
+            "details": [
+                {
+                    "reason": "INVALID_PASSWORD"
+                }
+            ]
+        }
+    }
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=login_payload, status=400)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletPermanentCommunicationException) as info:
+        api.login()
+    
+    assert 'Login failed, bad password' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
 
 @responses.activate
-def test_login_fail_temporary():
+def test_login_fail_step_1_temporary():
     responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               json=LOGIN_PAYLOAD, status=500)
 
@@ -112,9 +192,8 @@ def test_login_fail_temporary():
     assert api._auth_token == None
     assert api.get_auth_token() == None
 
-
 @responses.activate
-def test_login_fail_invalidjson():
+def test_login_fail_step_1_invalidjson():
     responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
               body="broken", status=200)
 
@@ -131,9 +210,8 @@ def test_login_fail_invalidjson():
     assert api._auth_token == None
     assert api.get_auth_token() == None
 
-
 @responses.activate
-def test_login_fail_incompletejson():
+def test_login_fail_step_1_incompletejson():
     login_payload = {
         'access_token': 'testtoken'
     }
@@ -152,10 +230,9 @@ def test_login_fail_incompletejson():
     assert api._password == "moped"
     assert api._auth_token == None
     assert api.get_auth_token() == None
-
       
 @responses.activate
-def test_login_fail_noconnection():
+def test_login_fail_step_1_noconnection():
     api = OwletAPI()
     api.set_email("test@test.de")
     api.set_password("moped")
@@ -169,6 +246,199 @@ def test_login_fail_noconnection():
     assert api._auth_token == None
     assert api.get_auth_token() == None
 
+@responses.activate
+def test_login_fail_step_2_temporary():
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=500)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+
+    assert 'Login request failed - status code (500) - (Step 2 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_2_invalidjson():
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              body="broken", status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+        
+    assert 'Server did not send valid json (Step 2 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_2_incompletejson():
+    login_payload = {
+    }
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=login_payload, status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+
+    assert 'Server did not send mini token (Step 2 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+      
+@responses.activate
+def test_login_fail_step_2_noconnection():
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+            json=LOGIN_PAYLOAD, status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+    
+    assert 'Login request failed - no response (Step 2 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_3_temporary():
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              json=LOGIN_PAYLOAD, status=500)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+
+    assert 'Login request failed - status code (500) - (Step 3 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_3_app_id_or_app_secret_bad():
+    login_payload = {
+        'error': 'Could not find application'
+    }
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              json=login_payload, status=404)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletPermanentCommunicationException) as info:
+        api.login()
+
+    assert 'login request failed - app_id or app_secret is bad (Step 3 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_3_invalidjson():
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              body="broken", status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+        
+    assert 'Server did not send valid json (Step 3 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_3_incompletejson():
+    login_payload = {
+        'access_token': 'testtoken'
+    }
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+              json=login_payload, status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+
+    assert 'Server did not send access token (Step 3 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+      
+@responses.activate
+def test_login_fail_step_3_noconnection():
+    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+              json=LOGIN_PAYLOAD, status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+    
+    assert 'Login request failed - no response (Step 3 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
 
 @responses.activate
 def test_get_auth_token_ok():
