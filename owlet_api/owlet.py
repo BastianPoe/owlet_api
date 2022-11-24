@@ -132,11 +132,14 @@ class Owlet():
             raise OwletNotInitializedException(
                 'Initialize first - no properties')
 
-        if 'LOGGED_DATA_CACHE' not in self.properties:
+        if 'LOGGED_DATA_CACHE' not in self.properties and \
+            'VITALS_LOG_FILE' not in self.properties:
             raise OwletNotInitializedException(
                 'Initialize first - missing property')
-
-        download_url = self.properties['LOGGED_DATA_CACHE'].value
+        if 'LOGGED_DATA_CACHE' in self.properties:
+            download_url = self.properties['LOGGED_DATA_CACHE'].value
+        if 'VITALS_LOG_FILE' in self.properties:
+            download_url = self.properties['VITALS_LOG_FILE'].value
         download_header = self.owlet_api.get_request_headers()
 
         try:
