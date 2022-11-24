@@ -14,9 +14,12 @@ from .owletexceptions import OwletNotInitializedException
 class OwletAPI():
     """Handles Owlet API stuff."""
 
-    owlet_login_url = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k'
+    google_API_key = 'AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k'
+    app_id = 'owa-rg-id'
+    app_secret = 'owa-dx85qljgtR6hmVflyrL6LasCxA8'
+    owlet_login_url = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='
     owlet_login_token_provider_url = 'https://ayla-sso.owletdata.com/mini/'
-    base_user_url = 'https://ads-owlue1.aylanetworks.com/api/v1/'
+    base_user_url = 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json'
     base_properties_url = 'https://ads-owlue1.aylanetworks.com/apiv1/'
 
     def __init__(self, email=None, password=None):
@@ -31,6 +34,18 @@ class OwletAPI():
         self._refresh_token = None
         self._expiry_time = None
         self._devices = []
+
+    def set_api_key(self, key):
+        """Set google API key."""
+        self.google_API_key = key
+
+    def set_app_id(self, app_id):
+        """Set app_id."""
+        self.app_id = app_id
+
+    def set_app_secret(self, app_secret):
+        """Set app_secret."""
+        self.app_secret = app_secret
 
     def set_email(self, email):
         """Set Email address aka Username."""
@@ -53,7 +68,7 @@ class OwletAPI():
             'Accept': 'application/json'
         }
 
-        login_url = self.owlet_login_url
+        login_url = self.owlet_login_url + self.google_API_key
 
 
 
@@ -150,12 +165,12 @@ class OwletAPI():
             'Accept': 'application/json'
         }
 
-        login_url = self.base_user_url + 'token_sign_in.json'
+        login_url = self.base_user_url
 
         login_payload = {
             'token': self._owlet_mini_token,
-            'app_id': 'owa-rg-id',
-            'app_secret': 'owa-dx85qljgtR6hmVflyrL6LasCxA8',
+            'app_id': self.app_id,
+            'app_secret': self.app_secret,
             'headers': {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'

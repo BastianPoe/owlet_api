@@ -167,7 +167,7 @@ DOWNLOAD_DATA = {
       'metadata':{  
 
       },
-      'value':'https://ads-owlue1.aylanetworks.com/apiv1/devices/24826059/properties/LOGGED_DATA_CACHE/datapoints/76ce9810-5375-11e8-e7a5-6450803806ca.json',
+      'value':OwletAPI.base_properties_url + 'devices/24826059/properties/LOGGED_DATA_CACHE/datapoints/76ce9810-5375-11e8-e7a5-6450803806ca.json',
       'created_at_from_device':None,
       'file':'https://ayla-device-field-production-1a2039d9.s3.amazonaws.com/X?AWSAccessKeyId=Y&Expires=1234&Signature=Z'
    }
@@ -199,14 +199,14 @@ def test_owlet_ok():
     
 @responses.activate
 def test_update_ok():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
     # Owlet will pull the properties of this particular device
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
 
     # Initialize OwletAPI
@@ -225,11 +225,11 @@ def test_update_ok():
 
 @responses.activate
 def test_update_noresponse():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     # Initialize OwletAPI
@@ -249,13 +249,13 @@ def test_update_noresponse():
 @responses.activate
 def test_update_return_code():
     # Owlet will pull the properties of this particular device
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=500)
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     # Initialize OwletAPI
@@ -275,14 +275,14 @@ def test_update_return_code():
 @responses.activate
 def test_update_invalid_json():
     # Owlet will pull the properties of this particular device
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               body="INVALID", status=200)
 
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     # Initialize OwletAPI
@@ -306,15 +306,15 @@ def test_update_repeat():
     my_device_attributes[0]['property']['data_updated_at'] = '2018-12-30T09:43:28Z'
     
     # Owlet will pull the properties of this particular device
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=my_device_attributes, status=200)
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     # Initialize OwletAPI
@@ -339,15 +339,15 @@ def test_update_repeat():
 
 @responses.activate
 def test_reactivate_ok():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/apiv1/properties/42738119/datapoints',
+    responses.add(responses.POST, OwletAPI.base_properties_url + 'properties/42738119/datapoints',
               status=201)
  
     # Initialize OwletAPI
@@ -364,11 +364,11 @@ def test_reactivate_ok():
 
 @responses.activate
 def test_reactivate_fail_noattributes():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     # Initialize OwletAPI
@@ -386,18 +386,18 @@ def test_reactivate_fail_noattributes():
 
 @responses.activate
 def test_reactivate_fail_wrongattributes():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     my_device_attributes = copy.deepcopy(DEVICE_ATTRIBUTES)
     my_device_attributes[0]['property']['name'] = 'DEADBEEF1'
     my_device_attributes[1]['property']['name'] = 'DEADBEEF2'
     my_device_attributes[2]['property']['name'] = 'DEADBEEF3'
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=my_device_attributes, status=200)
  
     # Initialize OwletAPI
@@ -417,13 +417,13 @@ def test_reactivate_fail_wrongattributes():
 
 @responses.activate
 def test_reactivate_fail_noconnection():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
  
     # Initialize OwletAPI
@@ -443,15 +443,15 @@ def test_reactivate_fail_noconnection():
 
 @responses.activate
 def test_reactivate_fail_statuscode():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/apiv1/properties/42738119/datapoints',
+    responses.add(responses.POST, OwletAPI.base_properties_url + 'properties/42738119/datapoints',
               status=500)
  
     # Initialize OwletAPI
@@ -471,13 +471,13 @@ def test_reactivate_fail_statuscode():
 
 @responses.activate
 def test_download_logged_data_ok():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
     responses.add(responses.GET, 'http://de.mo/file', 
               json=DOWNLOAD_DATA, status=200)
@@ -499,11 +499,11 @@ def test_download_logged_data_ok():
 
 @responses.activate
 def test_download_logged_data_fail_noinit():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
  
     # Initialize OwletAPI
@@ -521,18 +521,18 @@ def test_download_logged_data_fail_noinit():
 
 @responses.activate
 def test_download_logged_data_fail_noattribute():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
     my_device_attributes = copy.deepcopy(DEVICE_ATTRIBUTES)
     my_device_attributes[0]['property']['name'] = 'DEADBEEF3'
     my_device_attributes[1]['property']['name'] = 'DEADBEEF3'
     my_device_attributes[2]['property']['name'] = 'DEADBEEF3'
     my_device_attributes[3]['property']['name'] = 'DEADBEEF3'
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=my_device_attributes, status=200)
  
     # Initialize OwletAPI
@@ -552,13 +552,13 @@ def test_download_logged_data_fail_noattribute():
 
 @responses.activate
 def test_download_logged_data_fail_noconnection():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
  
     # Initialize OwletAPI
@@ -579,13 +579,13 @@ def test_download_logged_data_fail_noconnection():
 
 @responses.activate
 def test_download_logged_data_fail_statuscode():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
     responses.add(responses.GET, 'http://de.mo/file', 
               json=DOWNLOAD_DATA, status=500)
@@ -608,13 +608,13 @@ def test_download_logged_data_fail_statuscode():
 
 @responses.activate
 def test_download_logged_data_fail_invalidjson():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
     responses.add(responses.GET, 'http://de.mo/file', 
               body="INVALID", status=200)
@@ -637,13 +637,13 @@ def test_download_logged_data_fail_invalidjson():
 
 @responses.activate
 def test_download_logged_data_fail_incompletejson():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
     my_download_data = copy.deepcopy(DOWNLOAD_DATA)
     my_download_data['datapoint'] = {}
@@ -668,13 +668,13 @@ def test_download_logged_data_fail_incompletejson():
 
 @responses.activate
 def test_download_logged_data_fail_nodownload():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
     responses.add(responses.GET, 'http://de.mo/file', 
               json=DOWNLOAD_DATA, status=200)
@@ -697,13 +697,13 @@ def test_download_logged_data_fail_nodownload():
 
 @responses.activate
 def test_download_logged_data_fail_nodownloadcode():
-    responses.add(responses.POST, 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCBJ_5TRcPz_cQA4Xdqpcuo9PE5lR8Cc7k',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ayla-sso.owletdata.com/mini/',
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.POST, 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json',
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
-    responses.add(responses.GET, 'https://ads-owlue1.aylanetworks.com/apiv1/dsns/c/properties',
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'dsns/c/properties',
               json=DEVICE_ATTRIBUTES, status=200)
     responses.add(responses.GET, 'http://de.mo/file', 
               json=DOWNLOAD_DATA, status=200)
