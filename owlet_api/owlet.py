@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Contains Class Owlet."""
 
+import json
 from json.decoder import JSONDecodeError
 import requests
 from requests.exceptions import RequestException
@@ -99,13 +100,67 @@ class Owlet():
                 'Server Request failed - status code')
 
         try:
-            json = result.json()
+            json_data = result.json()
         except JSONDecodeError:
             raise OwletTemporaryCommunicationException(
                 'Update failed - JSON error')
 
-        for myproperty in json:
+        for myproperty in json_data:
             property_name = myproperty['property']['name']
+                    
+            if property_name == 'REAL_TIME_VITALS':
+                # Convert Dream Sock Data to Smart Sock 3 Format
+                vitals = json.loads(myproperty['property']['value'])
+                # OXYGEN_LEVEL = ox
+                temp_property = {
+                    'name': 'OXYGEN_LEVEL',
+                    'display_name': 'Oxygen Level',
+                    'key': myproperty['property']['key'],
+                    'value': vitals['ox'],
+                    'data_updated_at': myproperty['property']['data_updated_at']
+                }
+                new_property = OwletProperty(temp_property)
+                self.properties[new_property.name] = new_property
+                #HEART_RATE = hr
+                temp_property = {
+                    'name': 'HEART_RATE',
+                    'display_name': 'Heart Rate',
+                    'key': myproperty['property']['key'],
+                    'value': vitals['hr'],
+                    'data_updated_at': myproperty['property']['data_updated_at']
+                }
+                new_property = OwletProperty(temp_property)
+                self.properties[new_property.name] = new_property
+                #MOVEMENT = mv
+                temp_property = {
+                    'name': 'MOVEMENT',
+                    'display_name': 'Baby Movement',
+                    'key': myproperty['property']['key'],
+                    'value': vitals['mv'],
+                    'data_updated_at': myproperty['property']['data_updated_at']
+                }
+                new_property = OwletProperty(temp_property)
+                self.properties[new_property.name] = new_property
+                #BATT_LEVEL = bat
+                temp_property = {
+                    'name': 'BATT_LEVEL',
+                    'display_name': 'Battery Level (%)',
+                    'key': myproperty['property']['key'],
+                    'value': vitals['bat'],
+                    'data_updated_at': myproperty['property']['data_updated_at']
+                }
+                new_property = OwletProperty(temp_property)
+                self.properties[new_property.name] = new_property
+                #BLE_RSSI = rsi
+                temp_property = {
+                    'name': 'BLE_RSSI',
+                    'display_name': 'BLE RSSI',
+                    'key': myproperty['property']['key'],
+                    'value': vitals['rsi'],
+                    'data_updated_at': myproperty['property']['data_updated_at']
+                }
+                new_property = OwletProperty(temp_property)
+                self.properties[new_property.name] = new_property
             if property_name in self.properties:
                 self.properties[property_name].update(myproperty['property'])
             else:
