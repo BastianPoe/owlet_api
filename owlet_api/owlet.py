@@ -119,6 +119,39 @@ class Owlet():
                     'value': vitals['ox'],
                     'data_updated_at': myproperty['property']['data_updated_at']
                 }
+                # OXYGEN_TEN_MIN = oxta
+                temp_property = {
+                    'name': 'OXYGEN_TEN_MIN',
+                    'display_name': 'Oxygen Ten Minute Average',
+                    'key': myproperty['property']['key'],
+                    'value': vitals['oxta'],
+                    'data_updated_at': myproperty['property']['data_updated_at']
+                }
+                # BASE_STAT_ON = bso
+                temp_property = {
+                    'name': 'BASE_STAT_ON',
+                    'display_name': 'Base Station On',
+                    'key': myproperty['property']['key'],
+                    'value': vitals['bso'],
+                    'data_updated_at': myproperty['property']['data_updated_at']
+                }
+                # BAT_TIME = btt
+                temp_property = {
+                    'name': 'BAT_TIME',
+                    'display_name': 'Sock Battery (Minutes)',
+                    'key': myproperty['property']['key'],
+                    'value': vitals['btt'],
+                    'data_updated_at': myproperty['property']['data_updated_at']
+                }
+                
+                # CHARGE_STATUS = btt
+                temp_property = {
+                    'name': 'CHARGE_STATUS',
+                    'display_name': 'Charge Status',
+                    'key': myproperty['property']['key'],
+                    'value': vitals['chg'],
+                    'data_updated_at': myproperty['property']['data_updated_at']
+                }
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 #HEART_RATE = hr
