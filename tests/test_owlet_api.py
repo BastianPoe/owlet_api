@@ -15,7 +15,12 @@ from owlet_api.owletexceptions import OwletTemporaryCommunicationException
 from owlet_api.owletexceptions import OwletNotInitializedException
 
 LOGIN_PAYLOAD = {
-    'access_token': 'testtoken',
+    'access_token': 'test_access_token',
+    'idToken': 'test_id_token',
+    'refreshToken': 'test_refresh_token',
+    'refresh_token': 'test_refresh_token',
+    'mini_token': 'test_min_token',
+    'expiresIn': '3600',
     'expires_in': 86400
 }
 
@@ -49,7 +54,11 @@ DEVICES_PAYLOAD = [
 
 @responses.activate
 def test_login_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -60,16 +69,16 @@ def test_login_ok():
     
     assert api._email == "test@test.de"
     assert api._password == "moped"
-    assert api._auth_token == "testtoken"
+    assert api._auth_token == "test_access_token"
     assert api._expiry_time > time.time() + 86400 - 1
     assert api._expiry_time < time.time() + 86400 + 1
-    assert api.get_auth_token() == "testtoken"
+    assert api.get_auth_token() == "test_access_token"
 
 
 @responses.activate
 def test_login_fail():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
-              json=LOGIN_PAYLOAD, status=401)
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=400)
 
     api = OwletAPI()
     api.set_email("test@test.de")
@@ -83,11 +92,91 @@ def test_login_fail():
     assert api._password == "moped"
     assert api._auth_token == None
     assert api.get_auth_token() == None
+ 
+@responses.activate
+def test_login_fail_step_1_api_key_bad():
+    login_payload = {
+        "error": {
+            "details": [
+                {
+                    "reason": "API_KEY_INVALID",
+                }
+            ]
+        }
+    }
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=login_payload, status=400)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
     
+    with pytest.raises(OwletPermanentCommunicationException) as info:
+        api.login()
+    
+    assert 'Login failed, bad API key.' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+ 
+@responses.activate
+def test_login_fail_step_1_username_bad():
+    login_payload = {
+        "error": {
+            "details": [
+                {
+                    "reason": "EMAIL_NOT_FOUND"
+                }
+            ]
+        }
+    }
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=login_payload, status=400)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletPermanentCommunicationException) as info:
+        api.login()
+    
+    assert 'Login failed, bad username' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+ 
+@responses.activate
+def test_login_fail_step_1_password_bad():
+    login_payload = {
+        "error": {
+            "details": [
+                {
+                    "reason": "INVALID_PASSWORD"
+                }
+            ]
+        }
+    }
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=login_payload, status=400)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletPermanentCommunicationException) as info:
+        api.login()
+    
+    assert 'Login failed, bad password' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
 
 @responses.activate
-def test_login_fail_temporary():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+def test_login_fail_step_1_temporary():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=LOGIN_PAYLOAD, status=500)
 
     api = OwletAPI()
@@ -103,10 +192,9 @@ def test_login_fail_temporary():
     assert api._auth_token == None
     assert api.get_auth_token() == None
 
-
 @responses.activate
-def test_login_fail_invalidjson():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+def test_login_fail_step_1_invalid_json():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               body="broken", status=200)
 
     api = OwletAPI()
@@ -116,19 +204,18 @@ def test_login_fail_invalidjson():
     with pytest.raises(OwletTemporaryCommunicationException) as info:
         api.login()
         
-    assert 'Server did not send valid json' in str(info.value)
+    assert 'Server did not send valid json (Step 1 of 3)' in str(info.value)
     assert api._email == "test@test.de"
     assert api._password == "moped"
     assert api._auth_token == None
     assert api.get_auth_token() == None
 
-
 @responses.activate
-def test_login_fail_incompletejson():
+def test_login_fail_step_1_incomplete_json():
     login_payload = {
         'access_token': 'testtoken'
     }
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
               json=login_payload, status=200)
 
     api = OwletAPI()
@@ -138,15 +225,14 @@ def test_login_fail_incompletejson():
     with pytest.raises(OwletTemporaryCommunicationException) as info:
         api.login()
 
-    assert 'Server did not send access token' in str(info.value)
+    assert 'Server did not send id token (Step 1 of 3)' in str(info.value)
     assert api._email == "test@test.de"
     assert api._password == "moped"
     assert api._auth_token == None
     assert api.get_auth_token() == None
-
       
 @responses.activate
-def test_login_fail_noconnection():
+def test_login_fail_step_1_no_connection():
     api = OwletAPI()
     api.set_email("test@test.de")
     api.set_password("moped")
@@ -160,10 +246,207 @@ def test_login_fail_noconnection():
     assert api._auth_token == None
     assert api.get_auth_token() == None
 
+@responses.activate
+def test_login_fail_step_2_temporary():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=500)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+
+    assert 'Login request failed - status code (500) - (Step 2 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_2_invalid_json():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              body="broken", status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+        
+    assert 'Server did not send valid json (Step 2 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_2_incomplete_json():
+    login_payload = {
+    }
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=login_payload, status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+
+    assert 'Server did not send mini token (Step 2 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+      
+@responses.activate
+def test_login_fail_step_2_no_connection():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+            json=LOGIN_PAYLOAD, status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+    
+    assert 'Login request failed - no response (Step 2 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_3_temporary():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
+              json=LOGIN_PAYLOAD, status=500)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+
+    assert 'Login request failed - status code (500) - (Step 3 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_3_app_id_or_app_secret_bad():
+    login_payload = {
+        'error': 'Could not find application'
+    }
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
+              json=login_payload, status=404)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletPermanentCommunicationException) as info:
+        api.login()
+
+    assert 'login request failed - app_id or app_secret is bad (Step 3 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_3_invalid_json():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
+              body="broken", status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+        
+    assert 'Server did not send valid json (Step 3 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+
+@responses.activate
+def test_login_fail_step_3_incomplete_json():
+    login_payload = {
+        'access_token': 'testtoken'
+    }
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
+              json=login_payload, status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+
+    assert 'Server did not send access token (Step 3 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
+      
+@responses.activate
+def test_login_fail_step_3_no_connection():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+
+    api = OwletAPI()
+    api.set_email("test@test.de")
+    api.set_password("moped")
+    
+    with pytest.raises(OwletTemporaryCommunicationException) as info:
+        api.login()
+    
+    assert 'Login request failed - no response (Step 3 of 3)' in str(info.value)
+    assert api._email == "test@test.de"
+    assert api._password == "moped"
+    assert api._auth_token == None
+    assert api.get_auth_token() == None
 
 @responses.activate
 def test_get_auth_token_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -172,17 +455,25 @@ def test_get_auth_token_ok():
     api.login()
     # If no exception occurred, everything seems to be fine
     
-    assert api.get_auth_token() == "testtoken"
+    assert api.get_auth_token() == "test_access_token"
 
 
 @responses.activate
 def test_get_auth_token_relogin():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     login_payload2 = copy.deepcopy(LOGIN_PAYLOAD)
     login_payload2['access_token'] = 'newtoken'
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=login_payload2, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=login_payload2, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=login_payload2, status=200)
 
     api = OwletAPI()
@@ -192,7 +483,7 @@ def test_get_auth_token_relogin():
     # Login happens at 2018-12-30 and lasts 1 day
     with freeze_time("2018-12-30"):
         api.login()
-        assert api.get_auth_token() == "testtoken"
+        assert api.get_auth_token() == "test_access_token"
 
         
     with freeze_time("2019-12-30"):
@@ -206,7 +497,11 @@ def test_get_auth_token_fail():
 
 @responses.activate
 def test_get_request_headers_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -216,7 +511,7 @@ def test_get_request_headers_ok():
 
     assert api.get_request_headers()['Content-Type'] == "application/json"
     assert api.get_request_headers()['Accept'] == "application/json"
-    assert api.get_request_headers()['Authorization'] == "testtoken"
+    assert api.get_request_headers()['Authorization'] == "test_access_token"
 
 
 def test_get_request_headers_fail():
@@ -224,10 +519,14 @@ def test_get_request_headers_fail():
 
     assert api.get_request_headers() == None
 
-@patch('owlet_api.owletapi.Owlet.__init__', Mock(return_value=None))
+@patch('OwletAPI.owletapi.Owlet.__init__', Mock(return_value=None))
 @responses.activate
 def test_get_devices_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -235,7 +534,7 @@ def test_get_devices_ok():
     api.set_password("moped")
     api.login()
 
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json', json=DEVICES_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'devices.json', json=DEVICES_PAYLOAD, status=200)
     api.get_devices()
     
     assert Owlet.__init__.called_once
@@ -244,15 +543,19 @@ def test_get_devices_ok():
     args, kwargs = Owlet.__init__.call_args
     instance, arguments = args
     assert instance is api
-    assert arguments == devices_payload[0]['device']
+    assert arguments == DEVICES_PAYLOAD[0]['device']
     
     # When calling get_devices again, no new instances of Owlet should be created
     api.get_devices()
     assert Owlet.__init__.called_once
 
 @responses.activate
-def test_update_devices_fail_servererror():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+def test_update_devices_fail_server_error():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -260,7 +563,7 @@ def test_update_devices_fail_servererror():
     api.set_password("moped")
     api.login()
 
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json', json=DEVICES_PAYLOAD, status=500)
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'devices.json', json=DEVICES_PAYLOAD, status=500)
 
     with pytest.raises(OwletTemporaryCommunicationException) as info:
         api.update_devices()
@@ -268,8 +571,12 @@ def test_update_devices_fail_servererror():
     assert 'Server request failed - status code' in str(info.value)
 
 @responses.activate
-def test_update_devices_fail_noresponse():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+def test_update_devices_fail_no_response():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -283,8 +590,12 @@ def test_update_devices_fail_noresponse():
     assert 'Server request failed - no response' in str(info.value)
 
 @responses.activate
-def test_update_devices_fail_invalidjson():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+def test_update_devices_fail_invalid_json():
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -292,14 +603,14 @@ def test_update_devices_fail_invalidjson():
     api.set_password("moped")
     api.login()
 
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json', body="invalid", status=200)
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'devices.json', body="invalid", status=200)
 
     with pytest.raises(OwletTemporaryCommunicationException) as info:
         api.update_devices()
         
     assert 'Server did not send valid json' in str(info.value)
 
-def test_update_devices_fail_noinit():
+def test_update_devices_fail_no_init():
     api = OwletAPI()
 
     with pytest.raises(OwletNotInitializedException) as info:
@@ -311,7 +622,11 @@ def test_update_devices_fail_noinit():
 @patch('owlet_api.owlet.Owlet.get_update_interval', Mock(return_value=177))
 @responses.activate
 def test_get_devices_ok():
-    responses.add(responses.POST, 'https://user-field.aylanetworks.com/users/sign_in.json',
+    responses.add(responses.POST, OwletAPI.owlet_login_url + OwletAPI.google_API_key,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.owlet_login_token_provider_url,
+              json=LOGIN_PAYLOAD, status=200)
+    responses.add(responses.POST, OwletAPI.base_user_url,
               json=LOGIN_PAYLOAD, status=200)
 
     api = OwletAPI()
@@ -319,7 +634,7 @@ def test_get_devices_ok():
     api.set_password("moped")
     api.login()
 
-    responses.add(responses.GET, 'https://ads-field.aylanetworks.com/apiv1/devices.json', json=DEVICES_PAYLOAD, status=200)
+    responses.add(responses.GET, OwletAPI.base_properties_url + 'devices.json', json=DEVICES_PAYLOAD, status=200)
     api.get_devices()
  
     assert api.get_update_interval() == 177
