@@ -194,6 +194,8 @@ class Owlet():
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 # CHARGE_STATUS = chg
+                # 1 = Charged
+                # 2 = Charging
                 temp_property = {
                     'name': 'CHARGE_STATUS',
                     'display_name': 'Charge Status',
@@ -214,6 +216,8 @@ class Owlet():
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 # ALERT = alrt
+                # 16 = Disconnected
+                # 32 & 64 = Placement
                 temp_property = {
                     'name': 'ALERT',
                     'display_name': 'Alert Status',
@@ -224,6 +228,12 @@ class Owlet():
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 # OTA_STATUS = ota
+                # 0 = None
+                # 1 = Firmware being sent
+                # 2 = Waiting for sock to be plugged in
+                # 3 = Installing
+                # 4 = Installing Critical
+                # 5 = Unknown
                 temp_property = {
                     'name': 'OTA_STATUS',
                     'display_name': 'OTA Status',
@@ -234,6 +244,9 @@ class Owlet():
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 # SOCK_STATUS = srf
+                # 1 = Checking On
+                # 2 (When sc also = 2) = Kicking
+                # 3 = Recently Placed
                 temp_property = {
                     'name': 'SOCK_STATUS',
                     'display_name': 'Sock Status',
