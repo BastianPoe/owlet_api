@@ -17,6 +17,7 @@ class Owlet():
     def __init__(self, api, json):
         """Initialize Owlet with API reference and json object."""
         self.product_name = json['product_name']
+        self.product_class = json['product_class']
         self.model = json['model']
         self.dsn = json['dsn']
         self.sw_version = json['sw_version']
@@ -24,10 +25,21 @@ class Owlet():
         self.hwsig = json['hwsig']
         self.lan_ip = json['lan_ip']
         self.connected_at = json['connected_at']
+        self.connection_priority = json['connection_priority']
         self.connection_status = json['connection_status']
+        self.dealer = json['dealer']
         self.lat = float(json['lat'])
         self.lon = float(json['lng'])
+        self.locality = json['locality']
         self.device_type = json['device_type']
+        self.has_properties = json['has_properties']
+        self.key = json['key']
+        self.lan_enabled = json['lan_enabled']
+        self.manuf_model = json['manuf_model']
+        self.oem_model = json['oem_model']
+        self.model = json['model']
+        self.template_id = json['template_id']
+        self.unique_hardware_id = json['unique_hardware_id']
         self.properties = {}
         self.update_interval = 10
         self.owlet_api = api
