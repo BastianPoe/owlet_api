@@ -449,12 +449,158 @@ class OwletAPI():
             )
         con.commit()
 
+    def save_device_property_to_db(self, con, cur, property):
+        #Setup Database if it isn't already setup
+        cur.execute("CREATE TABLE IF NOT EXISTS device_properties(type,name,base_type,read_only,direction,scope,data_updated_at,key,device_key,product_name,track_only_changes,display_name,host_sw_version,time_series,derived,app_type,recipe,value,generated_from,generated_at,denied_roles,ack_enabled,retention_days,ack_status,ack_message,acked_at, PRIMARY KEY(key))")
+        con.commit()
+
+        #Add data to database
+        cur.execute('INSERT into device_properties (\
+                type,\
+                name,\
+                base_type,\
+                read_only,\
+                direction,\
+                scope,\
+                data_updated_at,\
+                key,\
+                device_key,\
+                product_name,\
+                track_only_changes,\
+                display_name,\
+                host_sw_version,\
+                time_series,\
+                derived,\
+                app_type,\
+                recipe,\
+                value,\
+                generated_from,\
+                generated_at,\
+                denied_roles,\
+                ack_enabled,\
+                retention_days,\
+                ack_status,\
+                ack_message,\
+                acked_at\
+            )\
+                VALUES (\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?\
+            )\
+            on conflict ("key") do \
+            UPDATE\
+            SET\
+                type=?,\
+                name=?,\
+                base_type=?,\
+                read_only=?,\
+                direction=?,\
+                scope=?,\
+                data_updated_at=?,\
+                key=?,\
+                device_key=?,\
+                product_name=?,\
+                track_only_changes=?,\
+                display_name=?,\
+                host_sw_version=?,\
+                time_series=?,\
+                derived=?,\
+                app_type=?,\
+                recipe=?,\
+                value=?,\
+                generated_from=?,\
+                generated_at=?,\
+                denied_roles=?,\
+                ack_enabled=?,\
+                retention_days=?,\
+                ack_status=?,\
+                ack_message=?,\
+                acked_at=?\
+            ',(property.type,\
+                property.name,\
+                property.base_type,\
+                property.read_only,\
+                property.direction,\
+                property.scope,\
+                property.data_updated_at,\
+                property.key,\
+                property.device_key,\
+                property.product_name,\
+                property.track_only_changes,\
+                property.display_name,\
+                property.host_sw_version,\
+                property.time_series,\
+                property.derived,\
+                property.app_type,\
+                property.recipe,\
+                property.value,\
+                property.generated_from,\
+                property.generated_at,\
+                json.dumps(property.denied_roles),\
+                property.ack_enabled,\
+                property.retention_days,\
+                property.ack_status,\
+                property.ack_message,\
+                property.acked_at,\
+                \
+                property.type,\
+                property.name,\
+                property.base_type,\
+                property.read_only,\
+                property.direction,\
+                property.scope,\
+                property.data_updated_at,\
+                property.key,\
+                property.device_key,\
+                property.product_name,\
+                property.track_only_changes,\
+                property.display_name,\
+                property.host_sw_version,\
+                property.time_series,\
+                property.derived,\
+                property.app_type,\
+                property.recipe,\
+                property.value,\
+                property.generated_from,\
+                property.generated_at,\
+                json.dumps(property.denied_roles),\
+                property.ack_enabled,\
+                property.retention_days,\
+                property.ack_status,\
+                property.ack_message,\
+                property.acked_at)
+            )
+        con.commit()
+       
 
     def save_everything_to_db(self, db_name):
         con = sqlite3.connect(db_name)
         cur = con.cursor()
         #Setup Database if it isn't already setup
-        cur.execute("CREATE TABLE IF NOT EXISTS device_properties(type,name,base_type,read_only,direction,scope,data_updated_at,key,device_key,product_name,track_only_changes,display_name,host_sw_version,time_series,derived,app_type,recipe,value,generated_from,generated_at,denied_roles,ack_enabled,retention_days,ack_status,ack_message,acked_at, PRIMARY KEY(key))")
         cur.execute("CREATE TABLE IF NOT EXISTS device_property_datapoints(dsn,name,updated_at,created_at,echo,metadata,generated_at,generated_from,value)")
         cur.execute("CREATE TABLE IF NOT EXISTS events (createTime,deviceType,eventType,isDiscrete,isUserModified,name,profile,service,serviceType,startTime,updateTime)")
         cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_summary(endTime,longestSleepSegmentMinutes,sessionType,sleepOnsetMinutes,sleepQuality,sleepStateDurationsMinutes,startTime,wakingsCount,awakeStateDurationsMinutes,lightSleepStateDurationsMinutes,deepSleepStateDurationsMinutes)")
@@ -464,5 +610,8 @@ class OwletAPI():
         # Get/Update device info
         for device in self.get_devices():
             self.save_device_to_db(con, cur, device)
+            device.update()
+            for name, property in device.get_properties().items():
+                self.save_device_property_to_db(con, cur, property)
 
         con.close()
