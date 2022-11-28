@@ -123,122 +123,101 @@ class Owlet():
             if property_name == 'REAL_TIME_VITALS':
                 # Convert Dream Sock Data to Smart Sock 3 Format
                 vitals = json.loads(myproperty['property']['value'])
+
                 # OXYGEN_LEVEL = ox
-                temp_property = {
-                    'name': 'OXYGEN_LEVEL',
-                    'display_name': 'Oxygen Level',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['ox'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'OXYGEN_LEVEL'
+                temp_property['display_name'] = 'Oxygen Level'
+                temp_property['value'] = vitals['ox']
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 #HEART_RATE = hr
-                temp_property = {
-                    'name': 'HEART_RATE',
-                    'display_name': 'Heart Rate',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['hr'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'HEART_RATE'
+                temp_property['display_name'] = 'Heart Rate'
+                temp_property['value'] = 'hr'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 #MOVEMENT = mv
-                temp_property = {
-                    'name': 'MOVEMENT',
-                    'display_name': 'Baby Movement',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['mv'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'MOVEMENT'
+                temp_property['display_name'] = 'Baby Movement'
+                temp_property['value'] = 'mv'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 # SOCK_CONNECTION = sc
-                temp_property = {
-                    'name': 'SOCK_CONNECTION',
-                    'display_name': 'Sock Connection',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['sc'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'SOCK_CONNECTION'
+                temp_property['display_name'] = 'Sock Connection'
+                temp_property['value'] = 'sc'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 """
                 # ??? = st
-                temp_property = {
-                    'name': '???',
-                    'display_name': '???',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['st'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = '???'
+                temp_property['display_name'] = '???'
+                temp_property['value'] = 'st'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 """
+
                 # BASE_STAT_ON = bso
-                temp_property = {
-                    'name': 'BASE_STAT_ON',
-                    'display_name': 'Base Station On',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['bso'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'BASE_STAT_ON'
+                temp_property['display_name'] = 'Base Station On'
+                temp_property['value'] = 'bso'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 #BATT_LEVEL = bat
-                temp_property = {
-                    'name': 'BATT_LEVEL',
-                    'display_name': 'Battery Level (%)',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['bat'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'BATT_LEVEL'
+                temp_property['display_name'] = 'Battery Level (%)'
+                temp_property['value'] = 'bat'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 # BAT_TIME = btt
-                temp_property = {
-                    'name': 'BAT_TIME',
-                    'display_name': 'Sock Battery (Minutes)',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['btt'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'BAT_TIME'
+                temp_property['display_name'] = 'Sock Battery (Minutes)'
+                temp_property['value'] = 'btt'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 # CHARGE_STATUS = chg
                 # 1 = Charged
                 # 2 = Charging
-                temp_property = {
-                    'name': 'CHARGE_STATUS',
-                    'display_name': 'Charge Status',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['chg'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'CHARGE_STATUS'
+                temp_property['display_name'] = 'Charge Status'
+                temp_property['value'] = 'chg'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 # ALRTS_DISABLED = aps
-                temp_property = {
-                    'name': 'ALRTS_DISABLED',
-                    'display_name': 'Disable Alerts',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['aps'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'ALRTS_DISABLED'
+                temp_property['display_name'] = 'Disable Alerts'
+                temp_property['value'] = 'aps'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 # ALERT = alrt
                 # 16 = Disconnected
                 # 32 & 64 = Placement
-                temp_property = {
-                    'name': 'ALERT',
-                    'display_name': 'Alert Status',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['alrt'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'ALERT'
+                temp_property['display_name'] = 'Alert Status'
+                temp_property['value'] = 'alrt'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 # OTA_STATUS = ota
                 # 0 = None
                 # 1 = Firmware being sent
@@ -246,129 +225,105 @@ class Owlet():
                 # 3 = Installing
                 # 4 = Installing Critical
                 # 5 = Unknown
-                temp_property = {
-                    'name': 'OTA_STATUS',
-                    'display_name': 'OTA Status',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['ota'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'OTA_STATUS'
+                temp_property['display_name'] = 'OTA Status'
+                temp_property['value'] = 'ota'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 # SOCK_STATUS = srf
                 # 1 = Checking On
                 # 2 (When sc also = 2) = Kicking
                 # 3 = Recently Placed
-                temp_property = {
-                    'name': 'SOCK_STATUS',
-                    'display_name': 'Sock Status',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['srf'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'SOCK_STATUS'
+                temp_property['display_name'] = 'Sock Status'
+                temp_property['value'] = 'srf'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
+
                 #BLE_RSSI = rsi
-                temp_property = {
-                    'name': 'BLE_RSSI',
-                    'display_name': 'BLE RSSI',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['rsi'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'BLE_RSSI'
+                temp_property['display_name'] = 'BLE RSSI'
+                temp_property['value'] = 'rsi'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property 
+
                 """
                 # ??? = sb
-                temp_property = {
-                    'name': '???',
-                    'display_name': '???',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['sb'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = '???'
+                temp_property['display_name'] = '???'
+                temp_property['value'] = 'sb'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 """
+
                 """
                 # ??? = ss
-                temp_property = {
-                    'name': '???',
-                    'display_name': '???',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['ss'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = '???'
+                temp_property['display_name'] = '???'
+                temp_property['value'] = 'ss'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 """
                 """
+
                 # ??? = mvb
-                temp_property = {
-                    'name': '???',
-                    'display_name': '???',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['mvb'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = '???'
+                temp_property['display_name'] = '???'
+                temp_property['value'] = 'mvb'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 """
                 """
+
                 # ??? = mst
-                temp_property = {
-                    'name': '???',
-                    'display_name': '???',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['mst'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = '???'
+                temp_property['display_name'] = '???'
+                temp_property['value'] = 'mst'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 """
                 # OXYGEN_TEN_MIN = oxta
-                temp_property = {
-                    'name': 'OXYGEN_TEN_MIN',
-                    'display_name': 'Oxygen Ten Minute Average',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['oxta'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = 'OXYGEN_TEN_MIN'
+                temp_property['display_name'] = 'Oxygen Ten Minute Average'
+                temp_property['value'] = 'oxta'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 """
+
                 # ??? = onm
-                temp_property = {
-                    'name': '???',
-                    'display_name': '???',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['onm'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = '???'
+                temp_property['display_name'] = '???'
+                temp_property['value'] = 'onm'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 """
                 """
+
                 # ??? = bsb
-                temp_property = {
-                    'name': '???',
-                    'display_name': '???',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['bsb'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = '???'
+                temp_property['display_name'] = '???'
+                temp_property['value'] = 'bsb'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 """
                 """
+
                 # ??? = hw
-                temp_property = {
-                    'name': '???',
-                    'display_name': '???',
-                    'key': myproperty['property']['key'],
-                    'value': vitals['hw'],
-                    'data_updated_at': myproperty['property']['data_updated_at']
-                }
+                temp_property = myproperty['property']
+                temp_property['name'] = '???'
+                temp_property['display_name'] = '???'
+                temp_property['value'] = 'hw'
                 new_property = OwletProperty(temp_property)
                 self.properties[new_property.name] = new_property
                 """
