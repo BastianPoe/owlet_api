@@ -316,12 +316,144 @@ class OwletAPI():
                 update_interval = device.get_update_interval()
 
         return update_interval
+    
+    def save_device_to_db(self, con, cur, device):
+        #Setup Database if it isn't already setup
+        cur.execute("CREATE TABLE IF NOT EXISTS device(connected_at,connection_priority,connection_status,dealer,device_type,dsn,has_properties,hwsig,key,lan_enabled,lan_ip,lat,lng,locality,mac,manuf_model,model,oem_model,product_class,product_name,sw_version,template_id,unique_hardware_id, PRIMARY KEY(key), UNIQUE(dsn))")
+        con.commit()
+
+        #Add data to database
+        cur.execute('INSERT into device (\
+                connected_at,\
+                connection_priority,\
+                connection_status,\
+                dealer,\
+                device_type,\
+                dsn,\
+                has_properties,\
+                hwsig,\
+                key,\
+                lan_enabled,\
+                lan_ip,\
+                lat,\
+                lng,\
+                locality,\
+                mac,\
+                manuf_model,\
+                model,\
+                oem_model,\
+                product_class,\
+                product_name,\
+                sw_version,\
+                template_id,\
+                unique_hardware_id\
+            )\
+                VALUES (\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?\
+            )\
+            on conflict ("key") do \
+            UPDATE\
+            SET\
+                connected_at = ?,\
+                connection_priority = ?,\
+                connection_status = ?,\
+                dealer = ?,\
+                device_type = ?,\
+                dsn = ?,\
+                has_properties = ?,\
+                hwsig = ?,\
+                key = ?,\
+                lan_enabled = ?,\
+                lan_ip = ?,\
+                lat = ?,\
+                lng = ?,\
+                locality = ?,\
+                mac = ?,\
+                manuf_model = ?,\
+                model = ?,\
+                oem_model = ?,\
+                product_class = ?,\
+                product_name = ?,\
+                sw_version = ?,\
+                template_id = ?,\
+                unique_hardware_id = ?\
+            ',(device.connected_at,\
+                json.dumps(device.connection_priority),\
+                device.connection_status,\
+                device.dealer,\
+                device.device_type,\
+                device.dsn,\
+                device.has_properties,\
+                device.hwsig,\
+                device.key,\
+                device.lan_enabled,\
+                device.lan_ip,\
+                device.lat,\
+                device.lon,\
+                device.locality,\
+                device.mac,\
+                device.manuf_model,\
+                device.model,\
+                device.oem_model,\
+                device.product_class,\
+                device.product_name,\
+                device.sw_version,\
+                device.template_id,\
+                device.unique_hardware_id,\
+                \
+                device.connected_at,\
+                json.dumps(device.connection_priority),\
+                device.connection_status,\
+                device.dealer,\
+                device.device_type,\
+                device.dsn,\
+                device.has_properties,\
+                device.hwsig,\
+                device.key,\
+                device.lan_enabled,\
+                device.lan_ip,\
+                device.lat,\
+                device.lon,\
+                device.locality,\
+                device.mac,\
+                device.manuf_model,\
+                device.model,\
+                device.oem_model,\
+                device.product_class,\
+                device.product_name,\
+                device.sw_version,\
+                device.template_id,\
+                device.unique_hardware_id)
+            )
+        con.commit()
+
 
     def save_everything_to_db(self, db_name):
         con = sqlite3.connect(db_name)
         cur = con.cursor()
         #Setup Database if it isn't already setup
-        cur.execute("CREATE TABLE IF NOT EXISTS device(connected_at,connection_priority,connection_status,dealer,device_type,dsn,has_properties,hwsig,key,lan_enabled,lan_ip,lat,lng,locality,mac,manuf_model,model,oem_model,product_class,product_name,sw_version,template_id,unique_hardware_id, PRIMARY KEY(key), UNIQUE(dsn))")
         cur.execute("CREATE TABLE IF NOT EXISTS device_properties(type,name,base_type,read_only,direction,scope,data_updated_at,key,device_key,product_name,track_only_changes,display_name,host_sw_version,time_series,derived,app_type,recipe,value,generated_from,generated_at,denied_roles,ack_enabled,retention_days,ack_status,ack_message,acked_at, PRIMARY KEY(key))")
         cur.execute("CREATE TABLE IF NOT EXISTS device_property_datapoints(dsn,name,updated_at,created_at,echo,metadata,generated_at,generated_from,value)")
         cur.execute("CREATE TABLE IF NOT EXISTS events (createTime,deviceType,eventType,isDiscrete,isUserModified,name,profile,service,serviceType,startTime,updateTime)")
@@ -331,129 +463,6 @@ class OwletAPI():
         
         # Get/Update device info
         for device in self.get_devices():
-            cur.execute('INSERT into device (\
-                            connected_at,\
-                            connection_priority,\
-                            connection_status,\
-                            dealer,\
-                            device_type,\
-                            dsn,\
-                            has_properties,\
-                            hwsig,\
-                            key,\
-                            lan_enabled,\
-                            lan_ip,\
-                            lat,\
-                            lng,\
-                            locality,\
-                            mac,\
-                            manuf_model,\
-                            model,\
-                            oem_model,\
-                            product_class,\
-                            product_name,\
-                            sw_version,\
-                            template_id,\
-                            unique_hardware_id\
-                        )\
-                         VALUES (\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?,\
-                            ?\
-                        )\
-                        on conflict ("key") do \
-                        UPDATE\
-                        SET\
-                            connected_at = ?,\
-                            connection_priority = ?,\
-                            connection_status = ?,\
-                            dealer = ?,\
-                            device_type = ?,\
-                            dsn = ?,\
-                            has_properties = ?,\
-                            hwsig = ?,\
-                            key = ?,\
-                            lan_enabled = ?,\
-                            lan_ip = ?,\
-                            lat = ?,\
-                            lng = ?,\
-                            locality = ?,\
-                            mac = ?,\
-                            manuf_model = ?,\
-                            model = ?,\
-                            oem_model = ?,\
-                            product_class = ?,\
-                            product_name = ?,\
-                            sw_version = ?,\
-                            template_id = ?,\
-                            unique_hardware_id = ?\
-                        ',(device.connected_at,\
-                            json.dumps(device.connection_priority),\
-                            device.connection_status,\
-                            device.dealer,\
-                            device.device_type,\
-                            device.dsn,\
-                            device.has_properties,\
-                            device.hwsig,\
-                            device.key,\
-                            device.lan_enabled,\
-                            device.lan_ip,\
-                            device.lat,\
-                            device.lon,\
-                            device.locality,\
-                            device.mac,\
-                            device.manuf_model,\
-                            device.model,\
-                            device.oem_model,\
-                            device.product_class,\
-                            device.product_name,\
-                            device.sw_version,\
-                            device.template_id,\
-                            device.unique_hardware_id,\
-                            \
-                            device.connected_at,\
-                            json.dumps(device.connection_priority),\
-                            device.connection_status,\
-                            device.dealer,\
-                            device.device_type,\
-                            device.dsn,\
-                            device.has_properties,\
-                            device.hwsig,\
-                            device.key,\
-                            device.lan_enabled,\
-                            device.lan_ip,\
-                            device.lat,\
-                            device.lon,\
-                            device.locality,\
-                            device.mac,\
-                            device.manuf_model,\
-                            device.model,\
-                            device.oem_model,\
-                            device.product_class,\
-                            device.product_name,\
-                            device.sw_version,\
-                            device.template_id,\
-                            device.unique_hardware_id)
-                        )
-            con.commit()
+            self.save_device_to_db(con, cur, device)
+
         con.close()
