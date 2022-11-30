@@ -451,7 +451,7 @@ class OwletAPI():
 
     def save_device_property_to_db(self, con, cur, property):
         #Setup Database if it isn't already setup
-        cur.execute("CREATE TABLE IF NOT EXISTS device_properties(type,name,base_type,read_only,direction,scope,data_updated_at,key,device_key,product_name,track_only_changes,display_name,host_sw_version,time_series,derived,app_type,recipe,value,generated_from,generated_at,denied_roles,ack_enabled,retention_days,ack_status,ack_message,acked_at, PRIMARY KEY(key))")
+        cur.execute("CREATE TABLE IF NOT EXISTS device_properties(type,name,base_type,read_only,direction,scope,data_updated_at,key,device_key,product_name,track_only_changes,display_name,host_sw_version,time_series,derived,app_type,recipe,value,generated_from,generated_at,denied_roles,ack_enabled,retention_days,ack_status,ack_message,acked_at, PRIMARY KEY(key,data_updated_at))")
         con.commit()
 
         #Add data to database
@@ -511,7 +511,7 @@ class OwletAPI():
                 ?,\
                 ?\
             )\
-            on conflict ("key") do \
+            on conflict ("key", "data_updated_at") do \
             UPDATE\
             SET\
                 type=?,\
@@ -605,6 +605,7 @@ class OwletAPI():
         cur.execute("CREATE TABLE IF NOT EXISTS events (createTime,deviceType,eventType,isDiscrete,isUserModified,name,profile,service,serviceType,startTime,updateTime)")
         cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_summary(endTime,longestSleepSegmentMinutes,sessionType,sleepOnsetMinutes,sleepQuality,sleepStateDurationsMinutes,startTime,wakingsCount,awakeStateDurationsMinutes,lightSleepStateDurationsMinutes,deepSleepStateDurationsMinutes)")
         cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_detail(timeWindowStartTime, sleepState)")
+        #cur.execute("CREATE TABLE IF NOT EXISTS vital_data(columns_go_here)")
         con.commit()
         
         # Get/Update device info
