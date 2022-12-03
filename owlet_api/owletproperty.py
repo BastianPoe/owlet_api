@@ -40,6 +40,7 @@ class OwletProperty():
         self.ack_status = None
         self.ack_message = None
         self.acked_at = None
+        self.expanded = False
 
         self._from_json(json)
 

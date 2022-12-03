@@ -8,6 +8,7 @@ import requests
 from requests.exceptions import RequestException
 import sqlite3
 from .owlet import Owlet
+from .owletpropertydatapoint import OwletPropertyDatapoint
 from .owletexceptions import OwletTemporaryCommunicationException
 from .owletexceptions import OwletPermanentCommunicationException
 from .owletexceptions import OwletNotInitializedException
@@ -595,13 +596,142 @@ class OwletAPI():
                 property.acked_at)
             )
         con.commit()
-       
+    
+    def save_device_property_datapoints_to_db(self, con, cur, dsn, property_name):
+        #Setup Database if it isn't already setup
+        cur.execute("CREATE TABLE IF NOT EXISTS device_property_datapoints(device_dsn,property_name,id,updated_at,created_at,created_at_from_device,echo,metadata,generated_at,generated_from,value,acked_at,ack_status,ack_message, PRIMARY KEY(id))")
+        con.commit()
+        cur.execute("select MAX(created_at) as max, MIN(created_at) as min FROM device_property_datapoints WHERE device_dsn = '{}' and property_name = '{}'".format(dsn,property_name))
+        max_date,min_date = cur.fetchone()
+        max_date = "&filter[created_at_since_date]="+max_date if max_date != None else ''
+        min_date = "&filter[created_at_end_date]="+min_date if min_date != None else ''
+        #Get datapoints newer than those already in DB
+        self.save_device_property_datapoints_to_db_by_range(con, cur, dsn, property_name, max_date)
+
+        #No need to run this the earlier run already collected them all.
+        if max_date != "":
+            #Get datapoints older than those already in DB
+            self.save_device_property_datapoints_to_db_by_range(con, cur, dsn, property_name, min_date)
+
+    def save_device_property_datapoints_to_db_by_range(self, con, cur, dsn, property_name, filter):
+        next_page = ""
+        while True:
+            """Get the Properties Datapoints."""
+            datapoints_url = self.base_properties_url + \
+                'dsns/{}/properties/{}/datapoints.json?paginated=true&is_forward_page=true{}{}'.format(dsn,property_name,next_page,filter)
+
+            properties_header = self.get_request_headers()
+
+            try:
+                result = requests.get(
+                    datapoints_url,
+                    headers=properties_header
+                )
+            except RequestException:
+                raise OwletTemporaryCommunicationException(
+                    'Server Request failed - no response')
+
+            if result.status_code != 200:
+                raise OwletTemporaryCommunicationException(
+                    'Server Request failed - status code')
+
+            try:
+                json_data = result.json()
+            except JSONDecodeError:
+                raise OwletTemporaryCommunicationException(
+                    'Update failed - JSON error')
+            next_page = "&next="+json_data["meta"]["next_page"] if json_data["meta"]["next_page"] != None else None
+            for mydatapoint in json_data["datapoints"]:
+                new_property = OwletPropertyDatapoint(mydatapoint['datapoint'])
+                        #Add data to database
+                cur.execute('INSERT into device_property_datapoints (\
+                        device_dsn,\
+                        property_name,\
+                        id,\
+                        updated_at,\
+                        created_at,\
+                        created_at_from_device,\
+                        echo,\
+                        metadata,\
+                        generated_at,\
+                        generated_from,\
+                        value,\
+                        acked_at,\
+                        ack_status,\
+                        ack_message\
+                    )\
+                        VALUES (\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?\
+                    )\
+                    on conflict ("id") do \
+                    UPDATE\
+                    SET\
+                        device_dsn=?,\
+                        property_name=?,\
+                        id=?,\
+                        updated_at=?,\
+                        created_at=?,\
+                        created_at_from_device=?,\
+                        echo=?,\
+                        metadata=?,\
+                        generated_at=?,\
+                        generated_from=?,\
+                        value=?,\
+                        acked_at=?,\
+                        ack_status=?,\
+                        ack_message=?\
+                    ',(dsn,\
+                        property_name,\
+                        new_property.id,\
+                        new_property.updated_at,\
+                        new_property.created_at,\
+                        new_property.created_at_from_device,\
+                        new_property.echo,\
+                        json.dumps(new_property.metadata),\
+                        new_property.generated_at,\
+                        new_property.generated_from,\
+                        new_property.value,\
+                        new_property.acked_at,\
+                        new_property.ack_status,\
+                        new_property.ack_message,\
+                        \
+                        dsn,\
+                        property_name,\
+                        new_property.id,\
+                        new_property.updated_at,\
+                        new_property.created_at,\
+                        new_property.created_at_from_device,\
+                        new_property.echo,\
+                        json.dumps(new_property.metadata),\
+                        new_property.generated_at,\
+                        new_property.generated_from,\
+                        new_property.value,\
+                        new_property.acked_at,\
+                        new_property.ack_status,\
+                        new_property.ack_message)
+                    )
+                con.commit()
+            if next_page == None:
+                break
+
 
     def save_everything_to_db(self, db_name):
         con = sqlite3.connect(db_name)
         cur = con.cursor()
         #Setup Database if it isn't already setup
-        cur.execute("CREATE TABLE IF NOT EXISTS device_property_datapoints(dsn,name,updated_at,created_at,echo,metadata,generated_at,generated_from,value)")
         cur.execute("CREATE TABLE IF NOT EXISTS events (createTime,deviceType,eventType,isDiscrete,isUserModified,name,profile,service,serviceType,startTime,updateTime)")
         cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_summary(endTime,longestSleepSegmentMinutes,sessionType,sleepOnsetMinutes,sleepQuality,sleepStateDurationsMinutes,startTime,wakingsCount,awakeStateDurationsMinutes,lightSleepStateDurationsMinutes,deepSleepStateDurationsMinutes)")
         cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_detail(timeWindowStartTime, sleepState)")
@@ -613,6 +743,10 @@ class OwletAPI():
             self.save_device_to_db(con, cur, device)
             device.update()
             for name, property in device.get_properties().items():
+                #Save Current Property Info
                 self.save_device_property_to_db(con, cur, property)
+                if property.expanded == False:
+                    #Save Historical Property Datapoints
+                    self.save_device_property_datapoints_to_db(con, cur, device.dsn, name)
 
         con.close()
