@@ -643,90 +643,257 @@ class OwletAPI():
             next_page = "&next="+json_data["meta"]["next_page"] if json_data["meta"]["next_page"] != None else None
             for mydatapoint in json_data["datapoints"]:
                 new_property = OwletPropertyDatapoint(mydatapoint['datapoint'])
-                        #Add data to database
-                cur.execute('INSERT into device_property_datapoints (\
-                        device_dsn,\
-                        property_name,\
-                        id,\
-                        updated_at,\
-                        created_at,\
-                        created_at_from_device,\
-                        echo,\
-                        metadata,\
-                        generated_at,\
-                        generated_from,\
-                        value,\
-                        acked_at,\
-                        ack_status,\
-                        ack_message\
-                    )\
-                        VALUES (\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?,\
-                        ?\
-                    )\
-                    on conflict ("id") do \
-                    UPDATE\
-                    SET\
-                        device_dsn=?,\
-                        property_name=?,\
-                        id=?,\
-                        updated_at=?,\
-                        created_at=?,\
-                        created_at_from_device=?,\
-                        echo=?,\
-                        metadata=?,\
-                        generated_at=?,\
-                        generated_from=?,\
-                        value=?,\
-                        acked_at=?,\
-                        ack_status=?,\
-                        ack_message=?\
-                    ',(dsn,\
-                        property_name,\
-                        new_property.id,\
-                        new_property.updated_at,\
-                        new_property.created_at,\
-                        new_property.created_at_from_device,\
-                        new_property.echo,\
-                        json.dumps(new_property.metadata),\
-                        new_property.generated_at,\
-                        new_property.generated_from,\
-                        new_property.value,\
-                        new_property.acked_at,\
-                        new_property.ack_status,\
-                        new_property.ack_message,\
-                        \
-                        dsn,\
-                        property_name,\
-                        new_property.id,\
-                        new_property.updated_at,\
-                        new_property.created_at,\
-                        new_property.created_at_from_device,\
-                        new_property.echo,\
-                        json.dumps(new_property.metadata),\
-                        new_property.generated_at,\
+                self.save_individual_device_property_datapoint_to_db(cur,con,new_property,dsn,property_name)
+
+                #Expand new format datapoints to old format
+                if property_name == 'REAL_TIME_VITALS':
+                    # Convert Dream Sock Data to Smart Sock 3 Format
+                    vitals = json.loads(new_property.value)
+
+                    # OXYGEN_LEVEL = ox
+                    temp_property = new_property
+                    temp_property.value = vitals['ox'] if 'ox' in vitals else ''
+                    temp_property.id = new_property.id + '0.01'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'OXYGEN_LEVEL')
+
+                    #HEART_RATE = hr
+                    temp_property = new_property
+                    new_property.value = vitals['hr'] if 'hr' in vitals else ''
+                    temp_property.id = new_property.id + '0.02'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'HEART_RATE')
+
+                    #MOVEMENT = mv
+                    temp_property = new_property
+                    new_property.value = vitals['mv'] if 'mv' in vitals else ''
+                    temp_property.id = new_property.id + '0.03'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'MOVEMENT')
+
+                    # SOCK_CONNECTION = sc
+                    temp_property = new_property
+                    new_property.value = vitals['sc'] if 'sc' in vitals else ''
+                    temp_property.id = new_property.id + '0.04'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'SOCK_CONNECTION')
+
+                    """
+                    # ??? = st
+                    temp_property = new_property
+                    new_property.value = vitals['st'] if 'st' in vitals else ''
+                    temp_property.id = new_property.id + '0.05'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'???')
+                    """
+
+                    # BASE_STAT_ON = bso
+                    temp_property = new_property
+                    new_property.value = vitals['bso'] if 'bso' in vitals else ''
+                    temp_property.id = new_property.id + '0.06'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'BASE_STAT_ON')
+
+                    #BATT_LEVEL = bat
+                    temp_property = new_property
+                    new_property.value = vitals['bat'] if 'bat' in vitals else ''
+                    temp_property.id = new_property.id + '0.07'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'BATT_LEVEL')
+
+                    # BAT_TIME = btt
+                    temp_property = new_property
+                    new_property.value = vitals['btt'] if 'btt' in vitals else ''
+                    temp_property.id = new_property.id + '0.08'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'BAT_TIME')
+
+                    # CHARGE_STATUS = chg
+                    # 1 = Charged
+                    # 2 = Charging
+                    temp_property = new_property
+                    new_property.value = vitals['chg'] if 'chg' in vitals else ''
+                    temp_property.id = new_property.id + '0.09'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'CHARGE_STATUS')
+
+                    # ALRTS_DISABLED = aps
+                    temp_property = new_property
+                    new_property.value = vitals['aps'] if 'aps' in vitals else ''
+                    temp_property.id = new_property.id + '0.10'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'ALRTS_DISABLED')
+
+                    # ALERT = alrt
+                    # 16 = Disconnected
+                    # 32 & 64 = Placement
+                    temp_property = new_property
+                    new_property.value = vitals['alrt'] if 'alrt' in vitals else ''
+                    temp_property.id = new_property.id + '0.11'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'ALERT')
+
+                    # OTA_STATUS = ota
+                    # 0 = None
+                    # 1 = Firmware being sent
+                    # 2 = Waiting for sock to be plugged in
+                    # 3 = Installing
+                    # 4 = Installing Critical
+                    # 5 = Unknown
+                    temp_property = new_property
+                    new_property.value = vitals['ota'] if 'ota' in vitals else ''
+                    temp_property.id = new_property.id + '0.12'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'OTA_STATUS')
+
+                    # SOCK_STATUS = srf
+                    # 1 = Checking On
+                    # 2 (When sc also = 2) = Kicking
+                    # 3 = Recently Placed
+                    temp_property = new_property
+                    new_property.value = vitals['srf'] if 'srf' in vitals else ''
+                    temp_property.id = new_property.id + '0.13'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'SOCK_STATUS')
+
+                    #BLE_RSSI = rsi
+                    temp_property = new_property
+                    new_property.value = vitals['rsi'] if 'rsi' in vitals else ''
+                    temp_property.id = new_property.id + '0.14'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'BLE_RSSI')
+
+                    """
+                    # ??? = sb
+                    temp_property = new_property
+                    new_property.value = vitals['sb'] if 'sb' in vitals else ''
+                    temp_property.id = new_property.id + '0.15'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'???')
+                    """
+
+                    """
+                    # ??? = ss
+                    temp_property = new_property
+                    new_property.value = vitals['ss'] if 'ss' in vitals else ''
+                    temp_property.id = new_property.id + '0.16'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'???')
+                    """
+                    """
+
+                    # ??? = mvb
+                    temp_property = new_property
+                    new_property.value = vitals['mvb'] if 'mvb' in vitals else ''
+                    temp_property.id = new_property.id + '0.17'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'???')
+                    """
+                    """
+
+                    # ??? = mst
+                    temp_property = new_property
+                    new_property.value = vitals['mst'] if 'mst' in vitals else ''
+                    temp_property.id = new_property.id + '0.18'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'???')
+                    """
+                    # OXYGEN_TEN_MIN = oxta
+                    temp_property = new_property
+                    new_property.value = vitals['oxta'] if 'oxta' in vitals else ''
+                    temp_property.id = new_property.id + '0.19'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'OXYGEN_TEN_MIN')
+                    """
+
+                    # ??? = onm
+                    temp_property = new_property
+                    new_property.value = vitals['onm'] if 'onm' in vitals else ''
+                    temp_property.id = new_property.id + '0.20'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'???')
+                    """
+                    """
+
+                    # ??? = bsb
+                    temp_property = new_property
+                    new_property.value = vitals['bsb'] if 'bsb' in vitals else ''
+                    temp_property.id = new_property.id + '0.21'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'???')
+                    """
+                    """
+
+                    # ??? = hw
+                    temp_property = new_property
+                    new_property.value = vitals['hw'] if 'hw' in vitals else ''
+                    temp_property.id = new_property.id + '0.22'
+                    self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'???')
+                    """
+            if next_page == None:
+                break
+    
+    def save_individual_device_property_datapoint_to_db(self, cur, con, new_property, dsn, property_name):
+        #Add data to database
+        cur.execute('INSERT into device_property_datapoints (\
+                device_dsn,\
+                property_name,\
+                id,\
+                updated_at,\
+                created_at,\
+                created_at_from_device,\
+                echo,\
+                metadata,\
+                generated_at,\
+                generated_from,\
+                value,\
+                acked_at,\
+                ack_status,\
+                ack_message\
+            )\
+                VALUES (\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?,\
+                ?\
+            )\
+            on conflict ("id") do \
+            UPDATE\
+            SET\
+                device_dsn=?,\
+                property_name=?,\
+                id=?,\
+                updated_at=?,\
+                created_at=?,\
+                created_at_from_device=?,\
+                echo=?,\
+                metadata=?,\
+                generated_at=?,\
+                generated_from=?,\
+                value=?,\
+                acked_at=?,\
+                ack_status=?,\
+                ack_message=?\
+            ',(dsn,\
+                property_name,\
+                new_property.id,\
+                new_property.updated_at,\
+                new_property.created_at,\
+                new_property.created_at_from_device,\
+                new_property.echo,\
+                json.dumps(new_property.metadata),\
+                new_property.generated_at,\
+                new_property.generated_from,\
+                new_property.value,\
+                new_property.acked_at,\
+                new_property.ack_status,\
+                new_property.ack_message,\
+                \
+                dsn,\
+                property_name,\
+                new_property.id,\
+                new_property.updated_at,\
+                new_property.created_at,\
+                new_property.created_at_from_device,\
+                new_property.echo,\
+                json.dumps(new_property.metadata),\
+                new_property.generated_at,\
                         new_property.generated_from,\
                         new_property.value,\
                         new_property.acked_at,\
                         new_property.ack_status,\
                         new_property.ack_message)
                     )
-                con.commit()
-            if next_page == None:
-                break
-
+        con.commit()
 
     def save_everything_to_db(self, db_name):
         con = sqlite3.connect(db_name)

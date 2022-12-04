@@ -20,7 +20,7 @@ class OwletPropertyDatapoint():
         self.metadata = None
         self.generated_at = None
         self.generated_from = None
-        self.value = None
+        self.value = ""
         self.acked_at = None
         self.ack_status = None
         self.ack_message = None

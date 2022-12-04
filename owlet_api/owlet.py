@@ -135,7 +135,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'OXYGEN_LEVEL'
                 new_property.display_name = 'Oxygen Level'
-                new_property.value = vitals['ox']
+                new_property.value = vitals['ox'] if 'ox' in vitals else ''
                 new_property.key = temp_key + 0.01
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -144,7 +144,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'HEART_RATE'
                 new_property.display_name = 'Heart Rate'
-                new_property.value = vitals['hr']
+                new_property.value = vitals['hr'] if 'hr' in vitals else ''
                 new_property.key = temp_key + 0.02
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -153,7 +153,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'MOVEMENT'
                 new_property.display_name = 'Baby Movement'
-                new_property.value = vitals['mv']
+                new_property.value = vitals['mv'] if 'mv' in vitals else ''
                 new_property.key = temp_key + 0.03
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -162,7 +162,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'SOCK_CONNECTION'
                 new_property.display_name = 'Sock Connection'
-                new_property.value = vitals['sc']
+                new_property.value = vitals['sc'] if 'sc' in vitals else ''
                 new_property.key = temp_key + 0.04
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -172,7 +172,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = '???'
                 new_property.display_name = '???'
-                new_property.value = vitals['st']
+                new_property.value = vitals['st'] if 'st' in vitals else ''
                 new_property.key = temp_key + 0.05
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -182,7 +182,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'BASE_STAT_ON'
                 new_property.display_name = 'Base Station On'
-                new_property.value = vitals['bso']
+                new_property.value = vitals['bso'] if 'bso' in vitals else ''
                 new_property.key = temp_key + 0.06
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -191,7 +191,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'BATT_LEVEL'
                 new_property.display_name = 'Battery Level (%)'
-                new_property.value = vitals['bat']
+                new_property.value = vitals['bat'] if 'bat' in vitals else ''
                 new_property.key = temp_key + 0.07
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -200,7 +200,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'BAT_TIME'
                 new_property.display_name = 'Sock Battery (Minutes)'
-                new_property.value = vitals['btt']
+                new_property.value = vitals['btt'] if 'btt' in vitals else ''
                 new_property.key = temp_key + 0.08
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -211,7 +211,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'CHARGE_STATUS'
                 new_property.display_name = 'Charge Status'
-                new_property.value = vitals['chg']
+                new_property.value = vitals['chg'] if 'chg' in vitals else ''
                 new_property.key = temp_key + 0.09
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -220,7 +220,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'ALRTS_DISABLED'
                 new_property.display_name = 'Disable Alerts'
-                new_property.value = vitals['aps']
+                new_property.value = vitals['aps'] if 'aps' in vitals else ''
                 new_property.key = temp_key + 0.10
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -231,7 +231,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'ALERT'
                 new_property.display_name = 'Alert Status'
-                new_property.value = vitals['alrt']
+                new_property.value = vitals['alrt'] if 'alrt' in vitals else ''
                 new_property.key = temp_key + 0.11
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -246,7 +246,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'OTA_STATUS'
                 new_property.display_name = 'OTA Status'
-                new_property.value = vitals['ota']
+                new_property.value = vitals['ota'] if 'ota' in vitals else ''
                 new_property.key = temp_key + 0.12
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -258,7 +258,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'SOCK_STATUS'
                 new_property.display_name = 'Sock Status'
-                new_property.value = vitals['srf']
+                new_property.value = vitals['srf'] if 'srf' in vitals else ''
                 new_property.key = temp_key + 0.13
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -267,7 +267,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'BLE_RSSI'
                 new_property.display_name = 'BLE RSSI'
-                new_property.value = vitals['rsi']
+                new_property.value = vitals['rsi'] if 'rsi' in vitals else ''
                 new_property.key = temp_key + 0.14
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property 
@@ -277,7 +277,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = '???'
                 new_property.display_name = '???'
-                new_property.value = vitals['sb']
+                new_property.value = vitals['sb'] if 'sb' in vitals else ''
                 new_property.key = temp_key + 0.15
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -288,7 +288,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = '???'
                 new_property.display_name = '???'
-                new_property.value = vitals['ss']
+                new_property.value = vitals['ss'] if 'ss' in vitals else ''
                 new_property.key = temp_key + 0.16
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -299,7 +299,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = '???'
                 new_property.display_name = '???'
-                new_property.value = vitals['mvb']
+                new_property.value = vitals['mvb'] if 'mvb' in vitals else ''
                 new_property.key = temp_key + 0.17
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -310,7 +310,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = '???'
                 new_property.display_name = '???'
-                new_property.value = vitals['mst']
+                new_property.value = vitals['mst'] if 'mst' in vitals else ''
                 new_property.key = temp_key + 0.18
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -319,7 +319,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = 'OXYGEN_TEN_MIN'
                 new_property.display_name = 'Oxygen Ten Minute Average'
-                new_property.value = vitals['oxta']
+                new_property.value = vitals['oxta'] if 'oxta' in vitals else ''
                 new_property.key = temp_key + 0.19
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -329,7 +329,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = '???'
                 new_property.display_name = '???'
-                new_property.value = vitals['onm']
+                new_property.value = vitals['onm'] if 'onm' in vitals else ''
                 new_property.key = temp_key + 0.20
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -340,7 +340,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = '???'
                 new_property.display_name = '???'
-                new_property.value = vitals['bsb']
+                new_property.value = vitals['bsb'] if 'bsb' in vitals else ''
                 new_property.key = temp_key + 0.21
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
@@ -351,7 +351,7 @@ class Owlet():
                 new_property = OwletProperty(myproperty['property'])
                 new_property.name = '???'
                 new_property.display_name = '???'
-                new_property.value = vitals['hw']
+                new_property.value = vitals['hw'] if 'hw' in vitals else ''
                 new_property.key = temp_key + 0.22
                 new_property.expanded = True
                 self.properties[new_property.name] = new_property
