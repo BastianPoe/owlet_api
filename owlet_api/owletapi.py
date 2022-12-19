@@ -1217,9 +1217,90 @@ class OwletAPI():
         except JSONDecodeError:
             raise OwletTemporaryCommunicationException(
                 'Update failed - JSON error')
-        for mydatapoint in json_data["sessions"]:
-            #Do Stuff
-            print("Do stuff")
+        count = len(json_data["data"]["timeWindowStartTimes"])
+        for x in range(count):
+            event_startTime = start_time
+            validSampleCount = json_data["data"]["counts"]["validSamples"][x]
+            firstReadingTime = json_data["data"]["firstReadingTime"][x]
+            heartRate_avg = json_data["data"]["heartRate"]["avg"][x]
+            heartRate_max = json_data["data"]["heartRate"]["max"][x]
+            heartRate_min = json_data["data"]["heartRate"]["min"][x]
+            lastReadingTime = json_data["data"]["lastReadingTime"][x]
+            movement_avg = json_data["data"]["movement"]["avg"][x]
+            oxygen_avg = json_data["data"]["oxygen"]["avg"][x]
+            oxygen_max = json_data["data"]["oxygen"]["max"][x]
+            oxygen_min = json_data["data"]["oxygen"]["min"][x]
+            timeWindowStartTime = json_data["data"]["timeWindowStartTime"][x]
+            cur.execute('INSERT into vital_data (\
+                    event_startTime,\
+                    validSampleCount,\
+                    firstReadingTime,\
+                    heartRate_avg,\
+                    heartRate_max,\
+                    heartRate_min,\
+                    lastReadingTime,\
+                    movement_avg,\
+                    oxygen_avg,\
+                    oxygen_max,\
+                    oxygen_min,\
+                    timeWindowStartTime\
+                )\
+                    VALUES (\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?\
+                )\
+                on conflict (event_startTime,timeWindowStartTime) do \
+                UPDATE\
+                SET\
+                    event_startTime=?,\
+                    validSampleCount=?,\
+                    firstReadingTime=?,\
+                    heartRate_avg=?,\
+                    heartRate_max=?,\
+                    heartRate_min=?,\
+                    lastReadingTime=?,\
+                    movement_avg=?,\
+                    oxygen_avg=?,\
+                    oxygen_max=?,\
+                    oxygen_min=?,\
+                    timeWindowStartTime=?\
+                ',(event_startTime if event_startTime != "" else '',\
+                   validSampleCount if validSampleCount != "" else '',\
+                    firstReadingTime if firstReadingTime != "" else '',\
+                    heartRate_avg if heartRate_avg != "" else '',\
+                    heartRate_max if heartRate_max != "" else '',\
+                    heartRate_min if heartRate_min != "" else '',\
+                    lastReadingTime if lastReadingTime != "" else '',\
+                    movement_avg if movement_avg != "" else '',\
+                    oxygen_avg if oxygen_avg != "" else '',\
+                    oxygen_max if oxygen_max != "" else '',\
+                    oxygen_min if oxygen_min != "" else '',\
+                    timeWindowStartTime if timeWindowStartTime != "" else '',\
+                    \
+                   event_startTime if event_startTime != "" else '',\
+                   validSampleCount if validSampleCount != "" else '',\
+                    firstReadingTime if firstReadingTime != "" else '',\
+                    heartRate_avg if heartRate_avg != "" else '',\
+                    heartRate_max if heartRate_max != "" else '',\
+                    heartRate_min if heartRate_min != "" else '',\
+                    lastReadingTime if lastReadingTime != "" else '',\
+                    movement_avg if movement_avg != "" else '',\
+                    oxygen_avg if oxygen_avg != "" else '',\
+                    oxygen_max if oxygen_max != "" else '',\
+                    oxygen_min if oxygen_min != "" else '',\
+                    timeWindowStartTime if timeWindowStartTime != "" else '')
+                )
+            con.commit()
 
     def save_everything_to_db(self, db_name):
         con = sqlite3.connect(db_name)
