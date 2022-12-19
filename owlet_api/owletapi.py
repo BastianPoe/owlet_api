@@ -4,6 +4,7 @@
 import json
 from json.decoder import JSONDecodeError
 import time
+import calendar
 import requests
 from requests.exceptions import RequestException
 import sqlite3
@@ -24,6 +25,9 @@ class OwletAPI():
     owlet_login_token_provider_url = 'https://ayla-sso.owletdata.com/mini/'
     base_user_url = 'https://ads-owlue1.aylanetworks.com/api/v1/token_sign_in.json'
     base_properties_url = 'https://ads-owlue1.aylanetworks.com/apiv1/'
+    
+    #By default vital data is returned in 10 minute increments. Change here if different time is desired
+    vital_data_resolution = 600
 
     def __init__(self, email=None, password=None):
         """Initialize OwletAPI, with email and password as opt. arguments."""
@@ -38,6 +42,10 @@ class OwletAPI():
         self._refresh_token = None
         self._expiry_time = None
         self._devices = []
+
+    def set_vital_data_resolution(self, time):
+        """Set vital data time resolution."""
+        self.vital_data_resolution = time
 
     def set_api_key(self, key):
         """Set google API key."""
@@ -894,21 +902,343 @@ class OwletAPI():
                         new_property.ack_message)
                     )
         con.commit()
+    
+    def save_events_to_db(self, con, cur, event_type = ""):
+        #SQL injection error here that I am currently ignoring
+        secondary_filter_sql = " where eventType = '{}'".format(event_type) if event_type != '' else ''
+        secondary_filter_web = "eventType%20%3D%20{}%20AND%20".format(event_type) if event_type != '' else ''
+        #Setup Database if it isn't already setup
+        cur.execute("CREATE TABLE IF NOT EXISTS events (createTime,deviceType,eventType,isDiscrete,isUserModified,name,profile,profileType,service,serviceType,startTime,updateTime, PRIMARY KEY(name))")
+        con.commit()
+
+        count = limit = 100
+
+        while count > 0:
+            cur.execute("select MAX(startTime) as max, MIN(startTime) as min FROM events{}".format(secondary_filter_sql))
+            max_date,min_date = cur.fetchone()
+            filter = "&filter={}(startTime%20%3E%20{}Z%20OR%20startTime%20%3C%20{}Z)".format(secondary_filter_web, max_date[0:19],min_date[0:19]) if max_date != None else ''
+            if filter == "" and secondary_filter_web != "":
+                filter = "&filter={}".format(secondary_filter_web[0:-9])
+
+            #Get Events
+            events_url = 'https://accounts.owletdata.com/v2/accounts/{}/events?totalSize={}{}'.format(self._owlet_local_id, limit, filter)
+
+            """Get the Events."""
+            properties_header = {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer {}'.format(self._owlet_id_token)
+            }
+
+            try:
+                result = requests.get(
+                    events_url,
+                    headers=properties_header
+                )
+            except RequestException:
+                raise OwletTemporaryCommunicationException(
+                    'Server Request failed - no response')
+            if result.status_code == 598:
+                #Temporary read error try again
+                self.save_events_to_db(con, cur)
+                #Exit loop since error ocurred
+                break
+            if result.status_code != 200:
+                raise OwletTemporaryCommunicationException(
+                    'Server Request failed - status code')
+
+            try:
+                json_data = result.json()
+                count = len(json_data["events"])
+            except JSONDecodeError:
+                raise OwletTemporaryCommunicationException(
+                    'Update failed - JSON error')
+            for mydatapoint in json_data["events"]:
+                #Lookup details first to allow for resuming upon error
+                if mydatapoint["eventType"] == "EVENT_TYPE_PROFILE_SLEEP":
+                    self.save_sleep_summary_data_to_db(con, cur, mydatapoint["profile"], mydatapoint["startTime"])
+                    self.save_vital_summary_data_to_db(con, cur, mydatapoint["profile"], mydatapoint["startTime"])
+                
+                #Add data to database
+                cur.execute('INSERT into events (\
+                        createTime,\
+                        deviceType,\
+                        eventType,\
+                        isDiscrete,\
+                        isUserModified,\
+                        name,\
+                        profile,\
+                        profileType,\
+                        service,\
+                        serviceType,\
+                        startTime,\
+                        updateTime\
+                    )\
+                        VALUES (\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?,\
+                        ?\
+                    )\
+                    on conflict ("name") do \
+                    UPDATE\
+                    SET\
+                        createTime=?,\
+                        deviceType=?,\
+                        eventType=?,\
+                        isDiscrete=?,\
+                        isUserModified=?,\
+                        name=?,\
+                        profile=?,\
+                        profileType=?,\
+                        service=?,\
+                        serviceType=?,\
+                        startTime=?,\
+                        updateTime=?\
+                    ',(mydatapoint["createTime"] if 'createTime' in mydatapoint else '',\
+                        mydatapoint["deviceType"] if 'deviceType' in mydatapoint else '',\
+                        mydatapoint["eventType"] if 'eventType' in mydatapoint else '',\
+                        mydatapoint["isDiscrete"] if 'isDiscrete' in mydatapoint else '',\
+                        mydatapoint["isUserModified"] if 'isUserModified' in mydatapoint else '',\
+                        mydatapoint["name"] if 'name' in mydatapoint else '',\
+                        mydatapoint["profile"] if 'profile' in mydatapoint else '',\
+                        mydatapoint["profileType"] if 'profileType' in mydatapoint else '',\
+                        mydatapoint["service"] if 'service' in mydatapoint else '',\
+                        mydatapoint["serviceType"] if 'serviceType' in mydatapoint else '',\
+                        mydatapoint["startTime"] if 'startTime' in mydatapoint else '',\
+                        mydatapoint["updateTime"] if 'updateTime' in mydatapoint else '',\
+                        \
+                        mydatapoint["createTime"] if 'createTime' in mydatapoint else '',\
+                        mydatapoint["deviceType"] if 'deviceType' in mydatapoint else '',\
+                        mydatapoint["eventType"] if 'eventType' in mydatapoint else '',\
+                        mydatapoint["isDiscrete"] if 'isDiscrete' in mydatapoint else '',\
+                        mydatapoint["isUserModified"] if 'isUserModified' in mydatapoint else '',\
+                        mydatapoint["name"] if 'name' in mydatapoint else '',\
+                        mydatapoint["profile"] if 'profile' in mydatapoint else '',\
+                        mydatapoint["profileType"] if 'profileType' in mydatapoint else '',\
+                        mydatapoint["service"] if 'service' in mydatapoint else '',\
+                        mydatapoint["serviceType"] if 'serviceType' in mydatapoint else '',\
+                        mydatapoint["startTime"] if 'startTime' in mydatapoint else '',\
+                        mydatapoint["updateTime"] if 'updateTime' in mydatapoint else '')
+                    )
+                con.commit()
+
+    def save_sleep_summary_data_to_db(self, con, cur, profile, start_time):
+        #Convert start_time to timestamp
+        temp_time = time.strptime(start_time, "%Y-%m-%dT%H:%M:%S%z")
+        start_timestamp = calendar.timegm(temp_time)
+        #Calculate end_time
+        end_timestamp = start_timestamp + 86400
+
+        #Setup Database if it isn't already setup
+        cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_summary(endTime,longestSleepSegmentMinutes,sessionType,sleepOnsetMinutes,sleepQuality,sleepStateDurationsMinutes,startTime,wakingsCount,awakeStateDurationsMinutes,lightSleepStateDurationsMinutes,deepSleepStateDurationsMinutes, PRIMARY KEY(startTime,endTime))")
+        cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_detail(summary_startTime, summary_endTime, timeWindowStartTime, sleepState, PRIMARY KEY(summary_startTime, summary_endTime, timeWindowStartTime))")
+        con.commit()
+
+        #Get Sleep Summary Data
+        events_url = 'https://sleep-data.owletdata.com/v1/{}/sleep?endTime={}&startTime={}&timeZone=GMT&version=smartSock3Sleep'.format(profile,end_timestamp,start_timestamp)
+        """Get the Events."""
+        properties_header = {
+            'Accept': 'application/json',
+            'Authorization': '{}'.format(self._owlet_id_token)
+        }
+
+        try:
+            result = requests.get(
+                events_url,
+                headers=properties_header
+            )
+        except RequestException:
+            raise OwletTemporaryCommunicationException(
+                'Server Request failed - no response')
+        if result.status_code == 598:
+            #Temporary read error try again
+            self.save_sleep_summary_data_to_db(con, cur, profile, start_time)
+            #Exit loop since error ocurred
+            return
+        if result.status_code != 200:
+            raise OwletTemporaryCommunicationException(
+                'Server Request failed - status code')
+
+        try:
+            json_data = result.json()
+        except JSONDecodeError:
+            raise OwletTemporaryCommunicationException(
+                'Update failed - JSON error')
+        for mydatapoint in json_data["sessions"]:
+            #Add data to database
+            cur.execute('INSERT into sleep_state_summary (\
+                    endTime,\
+                    longestSleepSegmentMinutes,\
+                    sessionType,\
+                    sleepOnsetMinutes,\
+                    sleepQuality,\
+                    sleepStateDurationsMinutes,\
+                    startTime,\
+                    wakingsCount,\
+                    awakeStateDurationsMinutes,\
+                    lightSleepStateDurationsMinutes,\
+                    deepSleepStateDurationsMinutes\
+                )\
+                    VALUES (\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?\
+                )\
+                on conflict ("startTime", "endTime") do \
+                UPDATE\
+                SET\
+                    endTime=?,\
+                    longestSleepSegmentMinutes=?,\
+                    sessionType=?,\
+                    sleepOnsetMinutes=?,\
+                    sleepQuality=?,\
+                    sleepStateDurationsMinutes=?,\
+                    startTime=?,\
+                    wakingsCount=?,\
+                    awakeStateDurationsMinutes=?,\
+                    lightSleepStateDurationsMinutes=?,\
+                    deepSleepStateDurationsMinutes=?\
+                ',(mydatapoint["endTime"] if 'endTime' in mydatapoint else '',\
+                    mydatapoint["longestSleepSegmentMinutes"] if 'longestSleepSegmentMinutes' in mydatapoint else '',\
+                    mydatapoint["sessionType"] if 'sessionType' in mydatapoint else '',\
+                    mydatapoint["sleepOnsetMinutes"] if 'sleepOnsetMinutes' in mydatapoint else '',\
+                    mydatapoint["sleepQuality"] if 'sleepQuality' in mydatapoint else '',\
+                    json.dumps(mydatapoint["sleepStateDurationsMinutes"]) if 'sleepStateDurationsMinutes' in mydatapoint else '',\
+                    mydatapoint["startTime"] if 'startTime' in mydatapoint else '',\
+                    mydatapoint["wakingsCount"] if 'wakingsCount' in mydatapoint else '',\
+                    mydatapoint["sleepStateDurationsMinutes"]['1'] if '1' in mydatapoint["sleepStateDurationsMinutes"] else '',\
+                    mydatapoint["sleepStateDurationsMinutes"]['8'] if '8' in mydatapoint["sleepStateDurationsMinutes"] else '',\
+                    mydatapoint["sleepStateDurationsMinutes"]['15'] if '15' in mydatapoint["sleepStateDurationsMinutes"] else '',\
+                    \
+                    mydatapoint["endTime"] if 'endTime' in mydatapoint else '',\
+                    mydatapoint["longestSleepSegmentMinutes"] if 'longestSleepSegmentMinutes' in mydatapoint else '',\
+                    mydatapoint["sessionType"] if 'sessionType' in mydatapoint else '',\
+                    mydatapoint["sleepOnsetMinutes"] if 'sleepOnsetMinutes' in mydatapoint else '',\
+                    mydatapoint["sleepQuality"] if 'sleepQuality' in mydatapoint else '',\
+                    json.dumps(mydatapoint["sleepStateDurationsMinutes"]) if 'sleepStateDurationsMinutes' in mydatapoint else '',\
+                    mydatapoint["startTime"] if 'startTime' in mydatapoint else '',\
+                    mydatapoint["wakingsCount"] if 'wakingsCount' in mydatapoint else '',\
+                    mydatapoint["sleepStateDurationsMinutes"]['1'] if '1' in mydatapoint["sleepStateDurationsMinutes"] else '',\
+                    mydatapoint["sleepStateDurationsMinutes"]['8'] if '8' in mydatapoint["sleepStateDurationsMinutes"] else '',\
+                    mydatapoint["sleepStateDurationsMinutes"]['15'] if '15' in mydatapoint["sleepStateDurationsMinutes"] else '')
+                )
+            con.commit()
+        count = len(json_data["data"]["timeWindowStartTimes"])
+        for x in range(count):
+            summary_startTime = json_data["sessions"][0]["startTime"]
+            summary_endTime = json_data["sessions"][0]["endTime"]
+            timeWindowStartTime = json_data["data"]["timeWindowStartTimes"][x]
+            sleepState = json_data["data"]["sleepStates"][x]
+            cur.execute('INSERT into sleep_state_detail (\
+                    summary_startTime,\
+                    summary_endTime,\
+                    timeWindowStartTime,\
+                    sleepState\
+                )\
+                    VALUES (\
+                    ?,\
+                    ?,\
+                    ?,\
+                    ?\
+                )\
+                on conflict (summary_startTime, summary_endTime, timeWindowStartTime) do \
+                UPDATE\
+                SET\
+                    summary_startTime=?,\
+                    summary_endTime=?,\
+                    timeWindowStartTime=?,\
+                    sleepState=?\
+                ',(summary_startTime if summary_startTime != "" else '',\
+                   summary_endTime if summary_startTime != "" else '',\
+                   timeWindowStartTime if timeWindowStartTime != "" else '',\
+                   sleepState if sleepState != "" else '',\
+                    \
+                   summary_startTime if summary_startTime != "" else '',\
+                   summary_endTime if summary_startTime != "" else '',\
+                   timeWindowStartTime if timeWindowStartTime != "" else '',\
+                   sleepState if sleepState != "" else '')
+                )
+            con.commit()
+
+    def save_vital_summary_data_to_db(self, con, cur, profile, start_time):
+        #Convert start_time to timestamp
+        temp_time = time.strptime(start_time, "%Y-%m-%dT%H:%M:%S%z")
+        start_timestamp = calendar.timegm(temp_time)
+        #Calculate end_time
+        end_timestamp = start_timestamp + 86400
+
+        #Setup Database if it isn't already setup
+        cur.execute("CREATE TABLE IF NOT EXISTS vital_data(event_startTime,validSampleCount,firstReadingTime,heartRate_avg,heartRate_max,heartRate_min,lastReadingTime,movement_avg,oxygen_avg,oxygen_max,oxygen_min,timeWindowStartTime, PRIMARY KEY(event_startTime,timeWindowStartTime))")
+        con.commit()
+
+        #Get Vitals Data
+        events_url = 'https://vital-data.owletdata.com/v1/{}/vitals?resolution={}&startTime={}&version=smartSock3Sleep&endTime={}'.format(profile,self.vital_data_resolution,start_timestamp,end_timestamp)
+        """Get the Events."""
+        properties_header = {
+            'Accept': 'application/json',
+            'Authorization': '{}'.format(self._owlet_id_token)
+        }
+
+        try:
+            result = requests.get(
+                events_url,
+                headers=properties_header
+            )
+        except RequestException:
+            raise OwletTemporaryCommunicationException(
+                'Server Request failed - no response')
+        if result.status_code == 598:
+            #Temporary read error try again
+            self.save_vital_summary_data_to_db(con, cur, profile, start_time)
+            #Exit loop since error ocurred
+            return
+        if result.status_code != 200:
+            raise OwletTemporaryCommunicationException(
+                'Server Request failed - status code')
+
+        try:
+            json_data = result.json()
+        except JSONDecodeError:
+            raise OwletTemporaryCommunicationException(
+                'Update failed - JSON error')
+        for mydatapoint in json_data["sessions"]:
+            #Do Stuff
+            print("Do stuff")
 
     def save_everything_to_db(self, db_name):
         con = sqlite3.connect(db_name)
         cur = con.cursor()
-        #Setup Database if it isn't already setup
-        cur.execute("CREATE TABLE IF NOT EXISTS events (createTime,deviceType,eventType,isDiscrete,isUserModified,name,profile,service,serviceType,startTime,updateTime)")
-        cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_summary(endTime,longestSleepSegmentMinutes,sessionType,sleepOnsetMinutes,sleepQuality,sleepStateDurationsMinutes,startTime,wakingsCount,awakeStateDurationsMinutes,lightSleepStateDurationsMinutes,deepSleepStateDurationsMinutes)")
-        cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_detail(timeWindowStartTime, sleepState)")
-        #cur.execute("CREATE TABLE IF NOT EXISTS vital_data(columns_go_here)")
-        con.commit()
+
+        self.save_events_to_db(con, cur)
+        self.save_events_to_db(con, cur, "EVENT_TYPE_PROFILE_SLEEP")
         
         # Get/Update device info
         for device in self.get_devices():
             self.save_device_to_db(con, cur, device)
             device.update()
+            
+            #Turn logging on
+            try:
+                device.reactivate()
+            except OwletTemporaryCommunicationException:
+                continue
+
             for name, property in device.get_properties().items():
                 #Save Current Property Info
                 self.save_device_property_to_db(con, cur, property)
