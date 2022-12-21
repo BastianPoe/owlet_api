@@ -1289,7 +1289,7 @@ class OwletAPI():
                 )
             con.commit()
 
-    def save_everything_to_db(self, db_name):
+    def save_everything_to_db(self, db_name = 'owlet.db'):
         con = sqlite3.connect(db_name)
         cur = con.cursor()
 
