@@ -938,7 +938,8 @@ class OwletAPI():
                 raise OwletTemporaryCommunicationException(
                     'Server Request failed - no response')
             if result.status_code == 598:
-                #Temporary read error try again
+                #Temporary read error wait 30 seconds and try again
+                time.sleep(30)
                 self.save_events_to_db(con, cur)
                 #Exit loop since error ocurred
                 break
@@ -1221,16 +1222,16 @@ class OwletAPI():
         for x in range(count):
             event_startTime = start_time
             validSampleCount = json_data["data"]["counts"]["validSamples"][x]
-            firstReadingTime = json_data["data"]["firstReadingTime"][x]
+            firstReadingTime = json_data["data"]["firstReadingTimes"][x]
             heartRate_avg = json_data["data"]["heartRate"]["avg"][x]
             heartRate_max = json_data["data"]["heartRate"]["max"][x]
             heartRate_min = json_data["data"]["heartRate"]["min"][x]
-            lastReadingTime = json_data["data"]["lastReadingTime"][x]
+            lastReadingTime = json_data["data"]["lastReadingTimes"][x]
             movement_avg = json_data["data"]["movement"]["avg"][x]
             oxygen_avg = json_data["data"]["oxygen"]["avg"][x]
             oxygen_max = json_data["data"]["oxygen"]["max"][x]
             oxygen_min = json_data["data"]["oxygen"]["min"][x]
-            timeWindowStartTime = json_data["data"]["timeWindowStartTime"][x]
+            timeWindowStartTime = json_data["data"]["timeWindowStartTimes"][x]
             cur.execute('INSERT into vital_data (\
                     event_startTime,\
                     validSampleCount,\
