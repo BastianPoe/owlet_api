@@ -326,12 +326,18 @@ class OwletAPI():
 
         return update_interval
     
-    def save_device_to_db(self, con, cur, device):
+    def create_db_structure(self, con, cur):
         #Setup Database if it isn't already setup
         cur.execute("CREATE TABLE IF NOT EXISTS device(connected_at,connection_priority,connection_status,dealer,device_type,dsn,has_properties,hwsig,key,lan_enabled,lan_ip,lat,lng,locality,mac,manuf_model,model,oem_model,product_class,product_name,sw_version,template_id,unique_hardware_id, PRIMARY KEY(key), UNIQUE(dsn))")
+        cur.execute("CREATE TABLE IF NOT EXISTS device_properties(type,name,base_type,read_only,direction,scope,data_updated_at,key,device_key,product_name,track_only_changes,display_name,host_sw_version,time_series,derived,app_type,recipe,value,generated_from,generated_at,denied_roles,ack_enabled,retention_days,ack_status,ack_message,acked_at, PRIMARY KEY(key,data_updated_at))")
+        cur.execute("CREATE TABLE IF NOT EXISTS device_property_datapoints(device_dsn,property_name,id,updated_at,created_at,created_at_from_device,echo,metadata,generated_at,generated_from,value,acked_at,ack_status,ack_message, PRIMARY KEY(id))")
+        cur.execute("CREATE TABLE IF NOT EXISTS events (createTime,deviceType,eventType,isDiscrete,isUserModified,name,profile,profileType,service,serviceType,startTime,updateTime, PRIMARY KEY(name))")
+        cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_summary(endTime,longestSleepSegmentMinutes,sessionType,sleepOnsetMinutes,sleepQuality,sleepStateDurationsMinutes,startTime,wakingsCount,awakeStateDurationsMinutes,lightSleepStateDurationsMinutes,deepSleepStateDurationsMinutes, PRIMARY KEY(startTime,endTime))")
+        cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_detail(summary_startTime, summary_endTime, timeWindowStartTime, sleepState, PRIMARY KEY(summary_startTime, summary_endTime, timeWindowStartTime))")
+        cur.execute("CREATE TABLE IF NOT EXISTS vital_data(event_startTime,validSampleCount,firstReadingTime,heartRate_avg,heartRate_max,heartRate_min,lastReadingTime,movement_avg,oxygen_avg,oxygen_max,oxygen_min,timeWindowStartTime, PRIMARY KEY(event_startTime,timeWindowStartTime))")
         con.commit()
 
-        #Add data to database
+    def save_device_to_db(self, con, cur, device):
         cur.execute('INSERT into device (\
                 connected_at,\
                 connection_priority,\
@@ -459,11 +465,6 @@ class OwletAPI():
         con.commit()
 
     def save_device_property_to_db(self, con, cur, property):
-        #Setup Database if it isn't already setup
-        cur.execute("CREATE TABLE IF NOT EXISTS device_properties(type,name,base_type,read_only,direction,scope,data_updated_at,key,device_key,product_name,track_only_changes,display_name,host_sw_version,time_series,derived,app_type,recipe,value,generated_from,generated_at,denied_roles,ack_enabled,retention_days,ack_status,ack_message,acked_at, PRIMARY KEY(key,data_updated_at))")
-        con.commit()
-
-        #Add data to database
         cur.execute('INSERT into device_properties (\
                 type,\
                 name,\
@@ -606,9 +607,6 @@ class OwletAPI():
         con.commit()
     
     def save_device_property_datapoints_to_db(self, con, cur, dsn, property_name):
-        #Setup Database if it isn't already setup
-        cur.execute("CREATE TABLE IF NOT EXISTS device_property_datapoints(device_dsn,property_name,id,updated_at,created_at,created_at_from_device,echo,metadata,generated_at,generated_from,value,acked_at,ack_status,ack_message, PRIMARY KEY(id))")
-        con.commit()
         cur.execute("select MAX(created_at) as max, MIN(created_at) as min FROM device_property_datapoints WHERE device_dsn = '{}' and property_name = '{}'".format(dsn,property_name))
         max_date,min_date = cur.fetchone()
         max_date = "&filter[created_at_since_date]="+max_date if max_date != None else ''
@@ -907,9 +905,6 @@ class OwletAPI():
         #SQL injection error here that I am currently ignoring
         secondary_filter_sql = " where eventType = '{}'".format(event_type) if event_type != '' else ''
         secondary_filter_web = "eventType%20%3D%20{}%20AND%20".format(event_type) if event_type != '' else ''
-        #Setup Database if it isn't already setup
-        cur.execute("CREATE TABLE IF NOT EXISTS events (createTime,deviceType,eventType,isDiscrete,isUserModified,name,profile,profileType,service,serviceType,startTime,updateTime, PRIMARY KEY(name))")
-        con.commit()
 
         count = limit = 100
 
@@ -1037,11 +1032,6 @@ class OwletAPI():
         start_timestamp = calendar.timegm(temp_time)
         #Calculate end_time
         end_timestamp = start_timestamp + 86400
-
-        #Setup Database if it isn't already setup
-        cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_summary(endTime,longestSleepSegmentMinutes,sessionType,sleepOnsetMinutes,sleepQuality,sleepStateDurationsMinutes,startTime,wakingsCount,awakeStateDurationsMinutes,lightSleepStateDurationsMinutes,deepSleepStateDurationsMinutes, PRIMARY KEY(startTime,endTime))")
-        cur.execute("CREATE TABLE IF NOT EXISTS sleep_state_detail(summary_startTime, summary_endTime, timeWindowStartTime, sleepState, PRIMARY KEY(summary_startTime, summary_endTime, timeWindowStartTime))")
-        con.commit()
 
         #Get Sleep Summary Data
         events_url = 'https://sleep-data.owletdata.com/v1/{}/sleep?endTime={}&startTime={}&timeZone=GMT&version=smartSock3Sleep'.format(profile,end_timestamp,start_timestamp)
@@ -1184,10 +1174,6 @@ class OwletAPI():
         #Calculate end_time
         end_timestamp = start_timestamp + 86400
 
-        #Setup Database if it isn't already setup
-        cur.execute("CREATE TABLE IF NOT EXISTS vital_data(event_startTime,validSampleCount,firstReadingTime,heartRate_avg,heartRate_max,heartRate_min,lastReadingTime,movement_avg,oxygen_avg,oxygen_max,oxygen_min,timeWindowStartTime, PRIMARY KEY(event_startTime,timeWindowStartTime))")
-        con.commit()
-
         #Get Vitals Data
         events_url = 'https://vital-data.owletdata.com/v1/{}/vitals?resolution={}&startTime={}&version=smartSock3Sleep&endTime={}'.format(profile,self.vital_data_resolution,start_timestamp,end_timestamp)
         """Get the Events."""
@@ -1306,6 +1292,8 @@ class OwletAPI():
     def save_everything_to_db(self, db_name):
         con = sqlite3.connect(db_name)
         cur = con.cursor()
+
+        self.create_db_structure(con, cur)
 
         self.save_events_to_db(con, cur)
         self.save_events_to_db(con, cur, "EVENT_TYPE_PROFILE_SLEEP")
