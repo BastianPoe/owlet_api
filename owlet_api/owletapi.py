@@ -607,7 +607,6 @@ class OwletAPI():
         con.commit()
     
     def save_device_property_datapoints_to_db(self, con, cur, dsn, property_name):
-        print("")
         cur.execute("select MAX(created_at) as max, MIN(created_at) as min FROM device_property_datapoints WHERE device_dsn = '{}' and property_name = '{}'".format(dsn,property_name))
         max_date,min_date = cur.fetchone()
         max_date = "&filter[created_at_since_date]="+max_date if max_date != None else ''
@@ -1329,6 +1328,7 @@ class OwletAPI():
                     #Save Historical Property Datapoints
                     print("Saving device {}'s historical state for {} to DB".format(device.dsn, name), end ="")
                     self.save_device_property_datapoints_to_db(con, cur, device.dsn, name)
+                    print("")
         
         print("Save events (like low O2 Alarm) to DB")
         self.save_events_to_db(con, cur)
