@@ -821,6 +821,7 @@ class OwletAPI():
             print(".", end ="")
             cur.execute("commit")
             con.commit()
+        print("")
             
     
     def save_individual_device_property_datapoint_to_db(self, cur, con, new_property, dsn, property_name):
@@ -1326,7 +1327,7 @@ class OwletAPI():
                 self.save_device_property_to_db(con, cur, property)
                 if property.expanded == False:
                     #Save Historical Property Datapoints
-                    print("Saving device {}'s historical state for {} to DB".format(device.dsn, name))
+                    print("Saving device {}'s historical state for {} to DB".format(device.dsn, name), end ="")
                     self.save_device_property_datapoints_to_db(con, cur, device.dsn, name)
         
         print("Save events (like low O2 Alarm) to DB")
