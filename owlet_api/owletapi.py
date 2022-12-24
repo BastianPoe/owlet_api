@@ -622,6 +622,7 @@ class OwletAPI():
     def save_device_property_datapoints_to_db_by_range(self, con, cur, dsn, property_name, filter):
         next_page = ""
         while True:
+            cur.execute("begin")
             """Get the Properties Datapoints."""
             datapoints_url = self.base_properties_url + \
                 'dsns/{}/properties/{}/datapoints.json?paginated=true&is_forward_page=true{}{}'.format(dsn,property_name,next_page,filter)
@@ -818,6 +819,9 @@ class OwletAPI():
             if next_page == None:
                 break
             print(".", end ="")
+            cur.execute("commit")
+            con.commit()
+            
     
     def save_individual_device_property_datapoint_to_db(self, cur, con, new_property, dsn, property_name):
         #Add data to database
@@ -900,16 +904,17 @@ class OwletAPI():
                         new_property.ack_status,\
                         new_property.ack_message)
                     )
-        con.commit()
 
     def save_events_to_db(self, con, cur, event_type = ""):
-        #SQL injection error here that I am currently ignoring
+        #potential SQL injection error here that I am currently ignoring
         secondary_filter_sql = " where eventType = '{}'".format(event_type) if event_type != '' else ''
         secondary_filter_web = "eventType%20%3D%20{}%20AND%20".format(event_type) if event_type != '' else ''
 
         count = limit = 100
 
         while count > 0:
+            cur.execute("begin")
+
             cur.execute("select MAX(startTime) as max, MIN(startTime) as min FROM events{}".format(secondary_filter_sql))
             max_date,min_date = cur.fetchone()
             filter = "&filter={}(startTime%20%3E%20{}Z%20OR%20startTime%20%3C%20{}Z)".format(secondary_filter_web, max_date[0:19],min_date[0:19]) if max_date != None else ''
@@ -936,6 +941,11 @@ class OwletAPI():
             if result.status_code == 598:
                 #Temporary read error wait 30 seconds and try again
                 time.sleep(30)
+                
+                #Close out DB transactions
+                cur.execute("commit")
+                con.commit()
+
                 self.save_events_to_db(con, cur)
                 #Exit loop since error ocurred
                 break
@@ -1025,6 +1035,8 @@ class OwletAPI():
                         mydatapoint["startTime"] if 'startTime' in mydatapoint else '',\
                         mydatapoint["updateTime"] if 'updateTime' in mydatapoint else '')
                     )
+            cur.execute("commit")
+            con.commit()
         con.commit()
         
     def save_sleep_summary_data_to_db(self, con, cur, profile, start_time):
@@ -1130,7 +1142,6 @@ class OwletAPI():
                     mydatapoint["sleepStateDurationsMinutes"]['8'] if '8' in mydatapoint["sleepStateDurationsMinutes"] else '',\
                     mydatapoint["sleepStateDurationsMinutes"]['15'] if '15' in mydatapoint["sleepStateDurationsMinutes"] else '')
                 )
-            con.commit()
         count = len(json_data["data"]["timeWindowStartTimes"])
         for x in range(count):
             summary_startTime = json_data["sessions"][0]["startTime"]
@@ -1166,7 +1177,6 @@ class OwletAPI():
                    timeWindowStartTime if timeWindowStartTime != "" else '',\
                    sleepState if sleepState != "" else '')
                 )
-            con.commit()
 
     def save_vital_summary_data_to_db(self, con, cur, profile, start_time):
         #Convert start_time to timestamp
@@ -1288,11 +1298,13 @@ class OwletAPI():
                     oxygen_min if oxygen_min != "" else '',\
                     timeWindowStartTime if timeWindowStartTime != "" else '')
                 )
-            con.commit()
 
     def save_everything_to_db(self, db_name = 'owlet.db'):
         con = sqlite3.connect(db_name)
         cur = con.cursor()
+
+        #Setup isolation level for performance reasons
+        con.isolation_level = None
 
         self.create_db_structure(con, cur)
 
