@@ -816,11 +816,11 @@ class OwletAPI():
                     temp_property.id = new_property.id + '0.22'
                     self.save_individual_device_property_datapoint_to_db(cur,con,temp_property,dsn,'???')
                     """
+            cur.execute("commit")
+            con.commit()
             if next_page == None:
                 break
             print(".", end ="")
-            cur.execute("commit")
-            con.commit()
         print("")
             
     
