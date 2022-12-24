@@ -1295,11 +1295,9 @@ class OwletAPI():
 
         self.create_db_structure(con, cur)
 
-        self.save_events_to_db(con, cur)
-        self.save_events_to_db(con, cur, "EVENT_TYPE_PROFILE_SLEEP")
-        
         # Get/Update device info
         for device in self.get_devices():
+            print("Saving device {} to DB".format(device.dsn))
             self.save_device_to_db(con, cur, device)
             device.update()
             
@@ -1309,6 +1307,7 @@ class OwletAPI():
             except OwletTemporaryCommunicationException:
                 continue
 
+            print("Saving device {}'s current and historical state to DB".format(device.dsn))
             for name, property in device.get_properties().items():
                 #Save Current Property Info
                 self.save_device_property_to_db(con, cur, property)
@@ -1316,4 +1315,10 @@ class OwletAPI():
                     #Save Historical Property Datapoints
                     self.save_device_property_datapoints_to_db(con, cur, device.dsn, name)
 
+        print("Save events (like low O2 Alarm) to DB")
+        self.save_events_to_db(con, cur)
+
+        print("Save sleeping events to DB")
+        self.save_events_to_db(con, cur, "EVENT_TYPE_PROFILE_SLEEP")
+        
         con.close()
