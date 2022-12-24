@@ -817,6 +817,7 @@ class OwletAPI():
                     """
             if next_page == None:
                 break
+            print(".", end ="")
     
     def save_individual_device_property_datapoint_to_db(self, cur, con, new_property, dsn, property_name):
         #Add data to database
@@ -900,7 +901,7 @@ class OwletAPI():
                         new_property.ack_message)
                     )
         con.commit()
-    
+
     def save_events_to_db(self, con, cur, event_type = ""):
         #SQL injection error here that I am currently ignoring
         secondary_filter_sql = " where eventType = '{}'".format(event_type) if event_type != '' else ''
@@ -1024,8 +1025,8 @@ class OwletAPI():
                         mydatapoint["startTime"] if 'startTime' in mydatapoint else '',\
                         mydatapoint["updateTime"] if 'updateTime' in mydatapoint else '')
                     )
-                con.commit()
-
+        con.commit()
+        
     def save_sleep_summary_data_to_db(self, con, cur, profile, start_time):
         #Convert start_time to timestamp
         temp_time = time.strptime(start_time, "%Y-%m-%dT%H:%M:%S%z")
@@ -1307,14 +1308,15 @@ class OwletAPI():
             except OwletTemporaryCommunicationException:
                 continue
 
-            print("Saving device {}'s current and historical state to DB".format(device.dsn))
+            print("Saving device {}'s current state to DB".format(device.dsn))
             for name, property in device.get_properties().items():
                 #Save Current Property Info
                 self.save_device_property_to_db(con, cur, property)
                 if property.expanded == False:
                     #Save Historical Property Datapoints
+                    print("Saving device {}'s historical state for {} to DB".format(device.dsn, name))
                     self.save_device_property_datapoints_to_db(con, cur, device.dsn, name)
-
+        
         print("Save events (like low O2 Alarm) to DB")
         self.save_events_to_db(con, cur)
 
