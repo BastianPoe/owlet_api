@@ -1067,6 +1067,14 @@ class OwletAPI():
             self.save_sleep_summary_data_to_db(con, cur, profile, start_time)
             #Exit loop since error ocurred
             return
+        if result.status_code == 429:
+            #To many requests 
+            wait_time = 20 if result.raw.retries.DEFAULT_BACKOFF_MAX else 120
+            print("To many requests waiting "+wait_time+" to try again.")
+            time.sleep(wait_time)   #wait the recommended 2 minutes and try again         
+            self.save_sleep_summary_data_to_db(con, cur, profile, start_time)
+            #Exit loop since error ocurred
+            return
         if result.status_code != 200:
             raise OwletTemporaryCommunicationException(
                 'Server Request failed - status code')
