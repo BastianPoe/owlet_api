@@ -20,7 +20,9 @@ def cli():
     parser.add_argument('password', help='Specify Password')
     parser.add_argument('actions', help='Specify the actions', nargs='+',
                         choices=["token", "devices", "attributes",
-                                 "stream", 'download'])
+                                 "stream", 'dump', 'download'])
+    parser.add_argument('--dbname', dest='dbname',
+                        help='Specify filename for dump. (dump saves all data to a sqlite database.)')
     parser.add_argument('--device', dest='device',
                         help='Specify DSN for device filter')
     parser.add_argument('--stream', dest='attributes', action='append',
@@ -46,7 +48,7 @@ def cli():
     try:
         api.login()
     except OwletPermanentCommunicationException:
-        print("Login failed, username or passwort might be wrong")
+        print("Login failed, username or password might be wrong")
         sys.exit(1)
     except OwletTemporaryCommunicationException:
         print("Login failed, server might be down")
@@ -73,6 +75,12 @@ def cli():
                     print("%-19s %-21s %-20s %s" %
                           (myproperty.name, myproperty.display_name,
                            myproperty.last_update, myproperty.value))
+
+    if "dump" in args.actions:
+        if args.dbname is None:
+            api.save_everything_to_db()
+        else:
+            api.save_everything_to_db(args.dbname)
 
     if "download" in args.actions:
         for device in api.get_devices():
