@@ -949,6 +949,18 @@ class OwletAPI():
                 self.save_events_to_db(con, cur, event_type)
                 #Exit loop since error ocurred
                 break
+            if result.status_code == 401:
+                #Close out DB transactions
+                cur.execute("commit")
+                con.commit()
+
+                #Login appears to have timedout, so login again
+                self.login();
+
+                #Retry collecting data
+                self.save_events_to_db(con, cur, event_type)
+                #Exit loop since error ocurred
+                break
             if result.status_code == 429:
                 #To many requests 
                 wait_time = result.raw.retries.DEFAULT_BACKOFF_MAX or 120
@@ -1077,6 +1089,13 @@ class OwletAPI():
                 'Server Request failed - no response')
         if result.status_code == 598:
             #Temporary read error try again
+            self.save_sleep_summary_data_to_db(con, cur, profile, start_time)
+            #Exit loop since error ocurred
+            return
+        if result.status_code == 401:
+            #Login error, try logging in again
+            self.login()
+            #Try collecting data again
             self.save_sleep_summary_data_to_db(con, cur, profile, start_time)
             #Exit loop since error ocurred
             return
