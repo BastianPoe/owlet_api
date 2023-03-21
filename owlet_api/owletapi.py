@@ -954,6 +954,8 @@ class OwletAPI():
                 cur.execute("commit")
                 con.commit()
 
+                print("401 Unauthorized. Loging in and trying again.")
+
                 #Login appears to have timedout, so login again
                 self.login();
 
@@ -1094,6 +1096,7 @@ class OwletAPI():
             return
         if result.status_code == 401:
             #Login error, try logging in again
+            print("401 Unauthorized. Loging in and trying again.")
             self.login()
             #Try collecting data again
             self.save_sleep_summary_data_to_db(con, cur, profile, start_time)
